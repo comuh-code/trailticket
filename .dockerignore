@@ -1,0 +1,10 @@
+.git
+.bundle
+pkg
+tmp
+log
+coverage
+*.gem
+spec/dummy/log
+spec/dummy/tmp
+spec/dummy/storage

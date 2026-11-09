@@ -1,0 +1,30 @@
+{
+  "name": "trailticket",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "devcontainer",
+  "workspaceFolder": "/app",
+  "shutdownAction": "stopCompose",
+  "overrideCommand": false,
+  "remoteUser": "appuser",
+  "postCreateCommand": "bundle check > /dev/null || bundle install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Shopify.ruby-lsp",
+        "kaiwood.endwise",
+        "eamodio.gitlens"
+      ],
+      "settings": {
+        "editor.tabSize": 2,
+        "editor.rulers": [100],
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true,
+        "[ruby]": {
+          "editor.defaultFormatter": "Shopify.ruby-lsp",
+          "editor.formatOnSave": true
+        },
+        "rubyLsp.formatter": "rubocop"
+      }
+    }
+  }
+}

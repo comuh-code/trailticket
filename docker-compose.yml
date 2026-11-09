@@ -1,0 +1,18 @@
+services:
+  devcontainer:
+    build:
+      context: .
+      args:
+        USER_ID: ${UID:-1000}
+        GROUP_ID: ${GID:-1000}
+    volumes:
+      - .:/app:cached
+      - gem_cache:/usr/local/bundle
+    environment:
+      RAILS_ENV: test
+    tty: true
+    stdin_open: true
+
+volumes:
+  gem_cache:
+    driver: local
