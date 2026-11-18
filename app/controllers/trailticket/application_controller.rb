@@ -1,6 +1,7 @@
 module Trailticket
   class ApplicationController < Trailticket.config.parent_controller.constantize
     before_action :trailticket_authenticate!
+    before_action { Trailticket::Current.actor = ticket_user }
 
     rescue_from ActiveRecord::RecordNotFound do
       render json: { error: "not_found" }, status: :not_found

@@ -6,7 +6,7 @@ module Trailticket
       json = {
         user: TicketSerializer.user(ticket_user),
         permissions: { open: policy.opener?, manage: policy.manage? },
-        statuses: Ticket::STATUSES,
+        statuses: Trailticket.config.statuses,
         priorities: Ticket::PRIORITIES,
         screenshots: Ticket.screenshots?
       }

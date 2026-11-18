@@ -7,6 +7,6 @@ Gemfile.lock
 spec/dummy/log/
 spec/dummy/tmp/
 spec/dummy/storage/
-spec/dummy/db/*.sqlite3
+spec/dummy/db/*.sqlite3*
 .DS_Store
 coverage/

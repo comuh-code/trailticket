@@ -19,6 +19,16 @@ Trailticket.configure do |c|
   # Controller the engine inherits from ("ActionController::API" for API-only apps).
   c.parent_controller = "ApplicationController"
 
+  # Statuses, in order (also the web interface columns). The last one is final.
+  # c.statuses = %w[open in_progress waiting closed]
+
+  # Web interface (mount Trailticket::Web). Denies everyone until configured.
+  # c.authorize     = ->(request) { request.env["warden"]&.user&.admin? }
+  # c.current_actor = ->(request) { request.env["warden"]&.user }
+  # c.author_label  = ->(user) { user.name }
+  # c.subject_label = ->(record) { record.try(:name) || "#{record.class.name} ##{record.id}" }
+  # c.context_partial = "admin/tickets/context"
+
   # Hooks, run after commit.
   # c.on_ticket_created  = ->(ticket) { }
   # c.on_message_created = ->(message) { }

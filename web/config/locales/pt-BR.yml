@@ -1,0 +1,85 @@
+pt-BR:
+  trailticket:
+    statuses:
+      open: Aberto
+      in_progress: Em andamento
+      waiting: Aguardando
+      closed: Fechado
+    priorities:
+      low: Baixa
+      normal: Normal
+      high: Alta
+      urgent: Urgente
+    web:
+      title: Chamados
+      board: Quadro
+      list: Lista
+      back: Voltar ao quadro
+      empty_column: Nenhum chamado
+      see_all:
+        one: Ver o chamado na lista
+        other: Ver todos os %{count} na lista
+      move_failed: "Não foi possível mover o chamado:"
+      change_status: Mudar status
+      status_error: "Status não alterado: %{error}"
+      invalid_status: "“%{status}” não é um status válido"
+      search: Busca
+      search_placeholder: Buscar pelo título
+      any_status: Qualquer status
+      any_priority: Qualquer prioridade
+      filter: Filtrar
+      clear: Limpar
+      no_results: Nenhum chamado com esses filtros.
+      pagination: Paginação
+      page: Página %{page} de %{pages}
+      previous: Anterior
+      next: Próxima
+      total:
+        zero: Nenhum chamado
+        one: 1 chamado
+        other: "%{count} chamados"
+      fields:
+        id: "#"
+        title: Título
+        status: Status
+        priority: Prioridade
+        author: Autor
+        subject: Assunto
+        assignee: Responsável
+        page_url: Página
+        created_at: Aberto em
+        updated_at: Atualizado em
+        closed_at: Fechado em
+        closed_by: Fechado por
+      ticket:
+        description: Descrição
+        details: Detalhes
+        trail: Trilha de navegação
+        trail_empty: Nenhuma navegação registrada.
+        context: Contexto
+        context_empty: Nenhum outro contexto.
+        screenshot: Captura de tela
+        history: Histórico
+        internal: Nota interna
+      timeline:
+        someone: Alguém
+        created_html: "<strong>%{actor}</strong> abriu o chamado"
+        status_changed_html: "<strong>%{actor}</strong> moveu de %{from} para %{to}"
+        closed_html: "<strong>%{actor}</strong> fechou o chamado (%{from} → %{to})"
+        reopened_html: "<strong>%{actor}</strong> reabriu o chamado (%{from} → %{to})"
+        priority_changed_html: "<strong>%{actor}</strong> mudou a prioridade de %{from} para %{to}"
+        assignee_changed_html: "<strong>%{actor}</strong> mudou o responsável de %{from} para %{to}"
+      reply:
+        title: Responder
+        body: Mensagem
+        placeholder: Escreva uma resposta…
+        internal: Nota interna
+        internal_hint: Notas internas só aparecem para a equipe, nunca para quem abriu o chamado.
+        submit: Enviar
+        blank: Escreva algo antes de enviar.
+        no_actor: "Não foi possível responder: config.current_actor não informou quem está respondendo."
+      forbidden:
+        title: Acesso negado
+        body: Você não tem permissão para ver esta página.
+      not_found:
+        title: Chamado não encontrado

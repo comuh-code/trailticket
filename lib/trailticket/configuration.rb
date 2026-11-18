@@ -1,5 +1,7 @@
 module Trailticket
   class Configuration
+    DEFAULT_STATUSES = %w[open in_progress waiting closed].freeze
+
     # --- Who is the user ---------------------------------------------------
 
     # Class of the user who opens and handles tickets ("User", "Admin"...).
@@ -38,6 +40,28 @@ module Trailticket
     attr_accessor :on_message_created  # ->(message) {}
     attr_accessor :on_status_changed   # ->(ticket, from, to) {}
 
+    # --- Tickets ---------------------------------------------------------------
+
+    # Ordered statuses, also the board columns. The first is the initial one and
+    # the last is final: moving there fills closed_at/closed_by, leaving it clears them.
+    attr_reader :statuses
+
+    # --- Web interface (Trailticket::Web) --------------------------------------
+    # Independent from can_open/can_manage, which only apply to the JSON API.
+
+    # ->(request) { bool }: who may use the web interface. Default: nobody.
+    attr_accessor :authorize
+
+    # ->(request) { record or nil }: who is acting, stored as closed_by.
+    attr_accessor :current_actor
+
+    # ->(record) { String }: how authors and subjects are shown.
+    attr_accessor :author_label, :subject_label
+
+    # Partial rendered on the ticket page with a `ticket` local, for the app's own
+    # context (e.g. "admin/tickets/context"). Optional.
+    attr_accessor :context_partial
+
     # --- Context capture -----------------------------------------------------
 
     # Extra field/param names to mask, on top of Rails' filter_parameters.
@@ -66,6 +90,13 @@ module Trailticket
       @parent_controller = "ApplicationController"
       @access_denied = nil
 
+      @statuses = DEFAULT_STATUSES
+      @authorize = ->(_request) { false }
+      @current_actor = ->(_request) {}
+      @author_label = ->(record) { "#{record.class.name} ##{record.id}" }
+      @subject_label = ->(record) { "#{record.class.name} ##{record.id}" }
+      @context_partial = nil
+
       @sensitive_fields = %w[pass secret token card cvv cvc cpf cnpj ssn iban] + [/\Aotp\z/i, /\Apin\z/i]
       @capture_field_values = true
       @max_trail_entries = 50
@@ -75,6 +106,13 @@ module Trailticket
 
       @max_screenshot_bytes = 5 * 1024 * 1024
       @screenshot_content_types = %w[image/png image/jpeg image/webp]
+    end
+
+    def statuses=(list)
+      list = Array(list).map(&:to_s).uniq
+      raise ArgumentError, "statuses needs at least two entries (initial and final)" unless list[1]
+
+      @statuses = list.freeze
     end
 
     def user_klass

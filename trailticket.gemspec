@@ -18,7 +18,7 @@ Gem::Specification.new do |spec|
   spec.metadata["rubygems_mfa_required"] = "true"
 
   spec.files = Dir.chdir(__dir__) do
-    Dir["{app,config,db,lib}/**/*", "README.md", "CHANGELOG.md", "MIT-LICENSE"]
+    Dir["{app,config,db,lib,web}/**/*", "README.md", "CHANGELOG.md", "MIT-LICENSE"]
   end
 
   spec.add_dependency "rails", ">= 7.1"

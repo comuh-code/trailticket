@@ -1,0 +1,85 @@
+en:
+  trailticket:
+    statuses:
+      open: Open
+      in_progress: In progress
+      waiting: Waiting
+      closed: Closed
+    priorities:
+      low: Low
+      normal: Normal
+      high: High
+      urgent: Urgent
+    web:
+      title: Tickets
+      board: Board
+      list: List
+      back: Back to board
+      empty_column: No tickets
+      see_all:
+        one: See the ticket in the list
+        other: See all %{count} in the list
+      move_failed: "Could not move the ticket:"
+      change_status: Change status
+      status_error: "Status not changed: %{error}"
+      invalid_status: "“%{status}” is not a valid status"
+      search: Search
+      search_placeholder: Search by title
+      any_status: Any status
+      any_priority: Any priority
+      filter: Filter
+      clear: Clear
+      no_results: No tickets match these filters.
+      pagination: Pagination
+      page: Page %{page} of %{pages}
+      previous: Previous
+      next: Next
+      total:
+        zero: No tickets
+        one: 1 ticket
+        other: "%{count} tickets"
+      fields:
+        id: "#"
+        title: Title
+        status: Status
+        priority: Priority
+        author: Author
+        subject: Subject
+        assignee: Assignee
+        page_url: Page
+        created_at: Opened
+        updated_at: Updated
+        closed_at: Closed
+        closed_by: Closed by
+      ticket:
+        description: Description
+        details: Details
+        trail: Navigation trail
+        trail_empty: No navigation recorded.
+        context: Context
+        context_empty: No other context.
+        screenshot: Screenshot
+        history: History
+        internal: Internal note
+      timeline:
+        someone: Someone
+        created_html: "<strong>%{actor}</strong> opened the ticket"
+        status_changed_html: "<strong>%{actor}</strong> moved it from %{from} to %{to}"
+        closed_html: "<strong>%{actor}</strong> closed the ticket (%{from} → %{to})"
+        reopened_html: "<strong>%{actor}</strong> reopened the ticket (%{from} → %{to})"
+        priority_changed_html: "<strong>%{actor}</strong> changed the priority from %{from} to %{to}"
+        assignee_changed_html: "<strong>%{actor}</strong> changed the assignee from %{from} to %{to}"
+      reply:
+        title: Reply
+        body: Message
+        placeholder: Write a reply…
+        internal: Internal note
+        internal_hint: Internal notes are only visible to the team, never to whoever opened the ticket.
+        submit: Send
+        blank: Write something before sending.
+        no_actor: "Cannot reply: config.current_actor did not return who is replying."
+      forbidden:
+        title: Access denied
+        body: You are not allowed to see this page.
+      not_found:
+        title: Ticket not found

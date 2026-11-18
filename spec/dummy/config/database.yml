@@ -2,3 +2,8 @@ test:
   adapter: sqlite3
   database: ":memory:"
   pool: 1
+
+development:
+  adapter: sqlite3
+  database: db/development.sqlite3
+  pool: 5

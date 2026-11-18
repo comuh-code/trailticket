@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.3.0] - 2026-11-18
+
+### Added
+- Web interface, mounted separately from the API: `mount Trailticket::Web => "/admin/tickets"`.
+  Kanban with drag and drop between status columns, list with search/filters/pagination and
+  ticket page with origin URL, navigation trail and the rest of the context.
+  Own layout, CSS and JS served by the engine (no dependency on the host's assets or frameworks);
+  English and Brazilian Portuguese translations; overridable views
+- Ticket history: status moves, close/reopen, priority and assignee changes are recorded in a
+  new `trailticket_events` table with who made them, and shown on the ticket page in one
+  timeline with replies and internal notes
+- Replies and internal notes from the ticket page, written by `current_actor`
+- `Trailticket.with_actor(user) { ... }` to record who made changes from the app's own code;
+  the web interface and the JSON API set it for each request
+- Config: `authorize` (denies by default), `current_actor`, `author_label`, `subject_label`,
+  `context_partial`, `statuses`
+- `spec/dummy` runs as a local app with sample data: `bin/dummy`
+
+### Upgrading
+- New migration: `bin/rails trailticket:install:migrations && bin/rails db:migrate`.
+  Until it runs, tickets keep working but no history is recorded
+
+### Changed
+- `status` is no longer an Active Record enum: it is validated against `config.statuses`.
+  `status_open?`, `status_closed?` etc. still work; `Ticket.status_open` scopes and
+  `Ticket.statuses` (the enum hash) are gone. The last status is final (`closed` by default)
+- The JSON API (`/me`, `GET /tickets?status=`) uses `config.statuses`
+
 ## [0.2.0] - 2026-11-18
 
 ### Added

@@ -20,6 +20,66 @@ RSpec.describe Trailticket::Ticket do
     end
   end
 
+  describe 'config.statuses' do
+    it 'needs an initial and a final status' do
+      config = Trailticket::Configuration.new
+
+      expect { config.statuses = %w[only] }.to raise_error(ArgumentError, /at least two/)
+      config.statuses = %i[new done]
+      expect(config.statuses).to eq(%w[new done])
+    end
+  end
+
+  describe 'history' do
+    let(:agent) { create(:admin, :agent, name: 'Sergio') }
+    let(:ticket) { create(:ticket, author: member) }
+
+    it 'records status, priority and assignee changes with the current actor' do
+      Trailticket.with_actor(agent) do
+        ticket.update!(status: 'in_progress', priority: 'high')
+        ticket.update!(assignee: agent)
+        ticket.close!(by: agent)
+      end
+
+      expected = [
+        ['status_changed', 'open', 'in_progress', agent],
+        ['priority_changed', 'normal', 'high', agent],
+        ['assignee_changed', nil, { 'type' => 'Admin', 'id' => agent.id }, agent],
+        ['status_changed', 'in_progress', 'closed', agent]
+      ]
+      expect(ticket.events.map { |e| [e.action, e.from, e.to, e.actor] }).to eq(expected)
+    end
+
+    it 'records changes without a known actor as nil' do
+      ticket.update!(status: 'waiting')
+
+      expect(ticket.events.sole.actor).to be_nil
+    end
+
+    it 'records nothing for other changes, replies or touches' do
+      ticket.update!(title: 'New title', body: 'New body')
+      ticket.messages.create!(author: member, body: 'Hi')
+      ticket.touch # rubocop:disable Rails/SkipsModelValidations
+
+      expect(ticket.events).to be_empty
+    end
+
+    it 'restores the previous actor after with_actor' do
+      Trailticket.with_actor(agent) { nil }
+
+      expect(Trailticket::Current.actor).to be_nil
+    end
+
+    it 'still saves tickets when the events table is missing (migration not run)' do
+      allow(described_class).to receive(:history?).and_return(false)
+
+      ticket.update!(status: 'closed')
+
+      expect(ticket.reload.status).to eq('closed')
+      expect(Trailticket::Event.count).to eq(0)
+    end
+  end
+
   describe '#close! and #reopen!' do
     let(:agent) { create(:admin, :agent) }
     let(:ticket) { create(:ticket, author: member) }

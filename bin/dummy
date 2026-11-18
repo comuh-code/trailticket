@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Runs the dummy app with the web interface at http://localhost:3000/chamados
+#
+#   docker compose run --rm -p 3000:3000 devcontainer bin/dummy
+#
+# Data lives in spec/dummy/db/development.sqlite3; delete it to start over.
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+bundle check > /dev/null || bundle install
+
+cd spec/dummy
+export RAILS_ENV=development
+SKIP_TEST_DATABASE=true bin/rails db:prepare
+bin/rails db:seed
+# A container that was killed leaves its pid file behind (the server is always pid 1).
+rm -f tmp/pids/server.pid
+exec bin/rails server -b 0.0.0.0 -p "${PORT:-3000}"

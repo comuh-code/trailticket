@@ -9,6 +9,7 @@ gem 'sqlite3'
 
 group :development, :test do
   gem 'factory_bot_rails'
+  gem 'puma' # bin/dummy
   gem 'rspec-rails'
   gem 'rubocop', require: false
   gem 'rubocop-factory_bot', require: false

@@ -30,6 +30,7 @@ module Trailticket
             4. Load the collector, e.g. with importmap:
                  pin "trailticket", to: "trailticket.js"
                and start it with endpoint: "#{options[:path]}"
+            5. Optional web interface: mount Trailticket::Web and set c.authorize (see README)
         MSG
       end
     end

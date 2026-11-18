@@ -1,0 +1,177 @@
+# Sample data for the local web interface (bin/dummy). Runs once: skipped if
+# there are tickets already. Delete db/development.sqlite3 to start over.
+return if Trailticket::Ticket.exists?
+
+agent = Admin.create!(name: "Sergio (suporte)", role: "agent")
+Admin.create!(name: "Paula (suporte)", role: "agent")
+members = %w[Olivia Bruno Carla Diego Ester].map { |name| Admin.create!(name: name, role: "member") }
+communities = ["Centro", "Vila Nova", "Jardim América", "Bela Vista"].map { |name| Community.create!(name: name) }
+
+base = "https://app.comuh.test"
+
+def trail(base, *steps)
+  steps.each_with_index.map do |(type, path, label), i|
+    { type: type, url: "#{base}#{path}", label: label, at: (30 - (i * 3)).minutes.ago.iso8601 }
+  end
+end
+
+samples = [
+  {
+    title: "Botão de pagar não responde no checkout",
+    body: "Cliquei em Pagar várias vezes e nada acontece.\nTentei no Chrome e no Firefox.",
+    priority: "urgent", status: "open", days: 0,
+    path: "/checkout?step=payment&token=abc123",
+    trail: [["visit", "/planos", "Planos"], ["click", "/planos", 'button "Assinar Pro"'],
+            ["visit", "/checkout?step=payment", "Checkout"], ["click", "/checkout?step=payment", 'button #pay "Pagar"']],
+    fields: [{ name: "plan", label: "Plano", type: "select-one", value: "pro" },
+             { name: "card_number", label: "Número do cartão", type: "text", value: "4111111111111111" }],
+    errors: [{ type: "error", message: "TypeError: Cannot read properties of undefined (reading 'id')",
+               source: "#{base}/assets/checkout.js", line: 120, column: 14 }],
+    metadata: { comuhub: { admin: 12, comunidade: { id: 3, nome: "Centro", plano: "pro" } } }
+  },
+  {
+    title: "Importação de CSV parou na linha 120",
+    body: "O arquivo tem 800 linhas, importou só as primeiras 119.",
+    priority: "high", status: "in_progress", days: 1,
+    path: "/membros/importar",
+    trail: [["visit", "/membros", "Membros"], ["click", "/membros", 'a "Importar"'],
+            ["submit", "/membros/importar", "form action=/membros/importar"]],
+    metadata: { comuhub: { admin: 7, comunidade: { id: 1, nome: "Vila Nova" }, arquivo: { linhas: 800, tamanho_kb: 96 } } }
+  },
+  {
+    title: "Não consigo redefinir a senha",
+    body: "O link do e-mail diz que expirou, mesmo clicando na hora.",
+    priority: "high", status: "waiting", days: 2,
+    path: "/senha/nova?reset_password_token=xyz789",
+    trail: [["visit", "/entrar", "Entrar"], ["click", "/entrar", 'a "Esqueci a senha"'],
+            ["visit", "/senha/nova?reset_password_token=xyz789", "Nova senha"]],
+    fields: [{ name: "user[password]", type: "password", value: "segredo" }]
+  },
+  {
+    title: "Relatório mensal com valores duplicados",
+    body: "Em outubro, cada doação aparece duas vezes no total.",
+    priority: "normal", status: "open", days: 3,
+    path: "/relatorios/mensal?mes=2026-10",
+    trail: [["visit", "/relatorios", "Relatórios"], ["click", "/relatorios", 'a "Mensal"']]
+  },
+  {
+    title: "Erro 500 ao convidar membro",
+    body: "Aparece a página de erro ao enviar o convite.",
+    priority: "high", status: "closed", days: 6,
+    path: "/convites/novo",
+    trail: [["visit", "/membros", "Membros"], ["click", "/membros", 'a "Convidar"'], ["submit", "/convites", "form"]],
+    errors: [{ type: "unhandledrejection", message: "HTTP 500" }]
+  },
+  {
+    title: "Foto de perfil fica cortada",
+    body: "A foto aparece cortada no topo em telas pequenas.",
+    priority: "low", status: "open", days: 4, path: "/perfil"
+  },
+  {
+    title: "Pedido: exportar lista de membros para Excel",
+    body: "Seria ótimo exportar a lista filtrada.",
+    priority: "low", status: "waiting", days: 9, path: "/membros?filtro=ativos"
+  },
+  {
+    title: "Notificações chegando em duplicidade",
+    body: "Cada aviso chega duas vezes no celular.",
+    priority: "normal", status: "in_progress", days: 2, path: "/notificacoes",
+    metadata: { comuhub: { dispositivo: { sistema: "Android 15", app: "2.4.1" } } }
+  },
+  {
+    title: "Calendário mostra eventos no fuso errado",
+    body: "Eventos às 19h aparecem às 22h.",
+    priority: "normal", status: "closed", days: 12, path: "/eventos?mes=11"
+  },
+  {
+    title: "Busca não encontra nomes com acento",
+    body: "Procurar por \"João\" não retorna nada, \"Joao\" funciona.",
+    priority: "normal", status: "open", days: 1, path: "/membros?q=Jo%C3%A3o",
+    trail: [["visit", "/membros", "Membros"], ["submit", "/membros", "form busca"]]
+  },
+  {
+    title: "Pagamento recusado sem mensagem",
+    body: "O cartão foi recusado e a tela só recarregou.",
+    priority: "urgent", status: "in_progress", days: 0, path: "/checkout?step=payment"
+  },
+  {
+    title: "Texto do termo de uso desatualizado",
+    body: "Ainda cita a versão de 2024.",
+    priority: "low", status: "closed", days: 20, path: "/termos"
+  },
+  {
+    title: "Dashboard demora para carregar",
+    body: "Mais de 10 segundos de manhã.",
+    priority: "normal", status: "waiting", days: 5, path: "/painel"
+  },
+  {
+    title: "Convite aceito não aparece na lista",
+    body: "O membro aceitou mas continua como pendente.",
+    priority: "normal", status: "open", days: 2, path: "/membros?status=pendente"
+  },
+  # Shows that user text is escaped and javascript: URLs never become links.
+  {
+    title: '<script>alert("xss")</script> título com HTML',
+    body: '<img src=x onerror=alert(1)> o corpo também é escapado',
+    priority: "low", status: "open", days: 7,
+    url: "javascript:alert(document.cookie)",
+    trail: [["visit", "/", "Início"]],
+    extra_trail: [{ type: "click", url: "javascript:alert(2)", label: "<svg onload=alert(3)>" }],
+    metadata: { teste: { html: "<b>negrito?</b>", link: "JaVaScRiPt:alert(4)" } }
+  }
+]
+
+# Changes below are recorded in each ticket's history as made by the agent.
+Trailticket::Current.actor = agent
+
+samples.each_with_index do |sample, i|
+  steps = sample[:trail] ? trail(base, *sample[:trail]) : []
+  ticket = Trailticket.open_ticket(
+    author: members[i % members.size],
+    subject: (communities[i % communities.size] unless (i % 4).zero?),
+    title: sample[:title],
+    body: sample[:body],
+    # Urgent ones start as high and get escalated, to show it in the history.
+    priority: sample[:priority] == "urgent" ? "high" : sample[:priority],
+    user_agent: "Mozilla/5.0 (X11; Linux x86_64) Firefox/140.0",
+    context: {
+      page: { url: sample[:url] || "#{base}#{sample[:path]}", title: sample[:title].first(40),
+              language: "pt-BR", timezone: "America/Sao_Paulo", viewport: "1440x900" },
+      trail: steps + Array(sample[:extra_trail]),
+      fields: sample[:fields] || [],
+      errors: sample[:errors] || []
+    },
+    metadata: sample[:metadata] || {}
+  )
+  raise "Seed failed: #{ticket.errors.full_messages.to_sentence}" unless ticket.persisted?
+
+  final = Trailticket::Ticket.final_status
+  if i.even?
+    ticket.messages.create!(author: agent, body: "Obrigado, estamos olhando.")
+    ticket.messages.create!(author: agent, body: "Parece ligado ao deploy de ontem.", internal: true)
+  end
+  # Walk the ticket through the statuses before its current one, like a real flow.
+  path = Trailticket.config.statuses.take_while { |status| status != sample[:status] }.drop(1)
+  path << sample[:status] unless sample[:status] == ticket.status
+  path.each do |status|
+    ticket.update!(status: status, closed_by: (agent if status == final))
+  end
+  ticket.update!(priority: sample[:priority]) if ticket.priority != sample[:priority]
+  if i.odd?
+    ticket.messages.create!(author: ticket.author, body: "Alguma novidade?")
+  end
+
+  # Spread the history over time, in the order it happened.
+  time = sample[:days].days.ago - (i * 37).minutes
+  history = (ticket.events.to_a + ticket.messages.to_a).sort_by(&:created_at)
+  history.each_with_index do |record, step|
+    record.update_columns(created_at: time + ((step + 1) * 25).minutes)
+  end
+  last = history.last&.created_at || time
+  ticket.update_columns(created_at: time, updated_at: last,
+                        closed_at: (last if ticket.final_status?))
+end
+
+Trailticket::Current.reset
+
+puts "Seeded #{Trailticket::Ticket.count} tickets."

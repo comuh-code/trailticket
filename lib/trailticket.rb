@@ -8,6 +8,7 @@ require "trailticket/configuration"
 require "trailticket/context_sanitizer"
 require "trailticket/screenshot_decoder"
 require "trailticket/engine"
+require "trailticket/web"
 
 module Trailticket
   class << self
@@ -34,6 +35,14 @@ module Trailticket
     # Returns the ticket; check #persisted? and #errors.
     def open_ticket(**attributes)
       Trailticket::OpenTicket.call(**attributes)
+    end
+
+    # Records who made the changes inside the block in the ticket history.
+    # The web interface and the API already do this for each request.
+    #
+    #   Trailticket.with_actor(current_user) { ticket.update!(priority: "high") }
+    def with_actor(actor, &block)
+      Current.set(actor: actor, &block)
     end
   end
 end

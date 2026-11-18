@@ -1,0 +1,20 @@
+<% content_for :title, tt('board') %>
+<h1 class="tt-sr-only"><%= tt('board') %></h1>
+<div class="tt-board" data-tt-board data-error="<%= tt('move_failed') %>">
+  <% @columns.each do |status, tickets| %>
+    <% count = @counts.fetch(status, 0) %>
+    <section class="tt-column" data-tt-column data-status="<%= status %>" aria-labelledby="tt-col-<%= status.parameterize %>">
+      <header class="tt-column-head">
+        <h2 id="tt-col-<%= status.parameterize %>"><%= status_label(status) %></h2>
+        <span class="tt-count" data-tt-count aria-label="<%= tt('total', count: count) %>"><%= count %></span>
+      </header>
+      <ol class="tt-cards" data-tt-cards>
+        <%= render partial: 'trailticket/panel/tickets/card', collection: tickets, as: :ticket %>
+      </ol>
+      <%= tag.p tt('empty_column'), class: 'tt-empty', data: { tt_empty: true }, hidden: tickets.any? %>
+      <% if count > tickets.size %>
+        <%= link_to tt('see_all', count: count), list_path(status: status), class: 'tt-more' %>
+      <% end %>
+    </section>
+  <% end %>
+</div>

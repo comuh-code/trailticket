@@ -1,0 +1,131 @@
+<% content_for :title, @ticket.title %>
+<p class="tt-back"><%= link_to "← #{tt('back')}", root_path %></p>
+
+<header class="tt-ticket-head">
+  <h1 class="tt-title"><span class="tt-muted">#<%= @ticket.id %></span> <%= @ticket.title %></h1>
+  <div class="tt-badges"><%= status_badge(@ticket.status) %> <%= priority_badge(@ticket.priority) %></div>
+</header>
+
+<% if @error %>
+  <p class="tt-error" role="alert" data-tt-error><%= tt('status_error', error: @error) %></p>
+<% end %>
+
+<%= render 'trailticket/panel/tickets/status_buttons', ticket: @ticket %>
+
+<div class="tt-ticket">
+  <div class="tt-ticket-main">
+    <section class="tt-panel">
+      <h2><%= tt('ticket.description') %></h2>
+      <div class="tt-body"><%= @ticket.body %></div>
+    </section>
+
+    <section class="tt-panel" data-tt-trail>
+      <h2><%= tt('ticket.trail') %></h2>
+      <% trail = ticket_trail(@ticket) %>
+      <% if trail.empty? %>
+        <p class="tt-muted"><%= tt('ticket.trail_empty') %></p>
+      <% else %>
+        <ol class="tt-trail">
+          <% trail.each do |entry| %>
+            <li class="tt-trail-item tt-trail-<%= entry['type'].to_s.parameterize %>">
+              <span class="tt-trail-type"><%= entry['type'] %></span>
+              <span class="tt-trail-label"><%= entry['label'] %></span>
+              <span class="tt-trail-url"><%= safe_link(entry['url']) %></span>
+              <% if entry['at'].present? %><span class="tt-muted tt-trail-at"><%= entry['at'] %></span><% end %>
+            </li>
+          <% end %>
+        </ol>
+      <% end %>
+    </section>
+
+    <section class="tt-panel" data-tt-context>
+      <h2><%= tt('ticket.context') %></h2>
+      <% context = ticket_context(@ticket) %>
+      <% if context.empty? %>
+        <p class="tt-muted"><%= tt('ticket.context_empty') %></p>
+      <% else %>
+        <%= context_value(context) %>
+      <% end %>
+    </section>
+
+    <% if Trailticket.config.context_partial.present? %>
+      <section class="tt-panel" data-tt-app-context>
+        <%= render partial: Trailticket.config.context_partial, locals: { ticket: @ticket } %>
+      </section>
+    <% end %>
+
+    <% if @ticket.screenshot? %>
+      <section class="tt-panel">
+        <h2><%= tt('ticket.screenshot') %></h2>
+        <a href="<%= ticket_screenshot_path(@ticket) %>" target="_blank" rel="noopener">
+          <img class="tt-screenshot" src="<%= ticket_screenshot_path(@ticket) %>" alt="<%= tt('ticket.screenshot') %>" loading="lazy">
+        </a>
+      </section>
+    <% end %>
+
+    <section class="tt-panel" id="history" data-tt-history>
+      <h2><%= tt('ticket.history') %></h2>
+      <ol class="tt-timeline">
+        <% ticket_timeline(@ticket, @events, @messages).each do |entry| %>
+          <% case entry.kind %>
+          <% when :created %>
+            <li class="tt-timeline-item tt-timeline-event" data-tt-entry="created">
+              <span class="tt-timeline-text"><%= tt('timeline.created_html', actor: author_label(@ticket.author)) %></span>
+              <span class="tt-muted"><%= time_label(entry.at) %></span>
+            </li>
+          <% when :event %>
+            <li class="tt-timeline-item tt-timeline-event" data-tt-entry="<%= entry.record.action %>">
+              <span class="tt-timeline-text"><%= event_sentence(entry.record) %></span>
+              <span class="tt-muted"><%= time_label(entry.at) %></span>
+            </li>
+          <% else %>
+            <% message = entry.record %>
+            <li id="message-<%= message.id %>" class="tt-timeline-item tt-message<%= ' tt-internal' if message.internal %>" data-tt-entry="<%= message.internal ? 'note' : 'message' %>">
+              <div class="tt-message-head">
+                <strong><%= author_label(message.author) %></strong>
+                <% if message.internal %><span class="tt-badge tt-badge-internal"><%= tt('ticket.internal') %></span><% end %>
+                <span class="tt-muted"><%= time_label(message.created_at) %></span>
+              </div>
+              <div class="tt-body"><%= message.body %></div>
+            </li>
+          <% end %>
+        <% end %>
+      </ol>
+
+      <%= form_with url: ticket_messages_path(@ticket), method: :post, class: 'tt-reply', id: 'reply', data: { tt_reply: true } do %>
+        <h3 class="tt-reply-title"><%= tt('reply.title') %></h3>
+        <% if @reply_error %>
+          <p class="tt-error" role="alert" data-tt-reply-error><%= @reply_error %></p>
+        <% end %>
+        <label class="tt-field">
+          <span class="tt-sr-only"><%= tt('reply.body') %></span>
+          <textarea name="body" rows="4" required placeholder="<%= tt('reply.placeholder') %>"><%= @reply&.body %></textarea>
+        </label>
+        <div class="tt-reply-actions">
+          <label class="tt-check">
+            <input type="checkbox" name="internal" value="1" <%= 'checked' if @reply&.internal %>>
+            <span><%= tt('reply.internal') %></span>
+          </label>
+          <button type="submit" class="tt-button tt-primary"><%= tt('reply.submit') %></button>
+        </div>
+        <p class="tt-muted tt-hint"><%= tt('reply.internal_hint') %></p>
+      <% end %>
+    </section>
+  </div>
+
+  <aside class="tt-panel tt-ticket-side">
+    <h2><%= tt('ticket.details') %></h2>
+    <dl class="tt-details">
+      <dt><%= tt('fields.page_url') %></dt><dd class="tt-break" data-tt-page-url><%= safe_link(@ticket.page_url) %></dd>
+      <dt><%= tt('fields.author') %></dt><dd><%= author_label(@ticket.author) %></dd>
+      <dt><%= tt('fields.subject') %></dt><dd><%= subject_label(@ticket.subject) %></dd>
+      <dt><%= tt('fields.assignee') %></dt><dd><%= author_label(@ticket.assignee) %></dd>
+      <dt><%= tt('fields.created_at') %></dt><dd><%= time_label(@ticket.created_at) %></dd>
+      <dt><%= tt('fields.updated_at') %></dt><dd><%= time_label(@ticket.updated_at) %></dd>
+      <% if @ticket.closed_at %>
+        <dt><%= tt('fields.closed_at') %></dt><dd><%= time_label(@ticket.closed_at) %></dd>
+        <dt><%= tt('fields.closed_by') %></dt><dd data-tt-closed-by><%= author_label(@ticket.closed_by) %></dd>
+      <% end %>
+    </dl>
+  </aside>
+</div>

@@ -1,6 +1,5 @@
 module Trailticket
   class TicketsController < ApplicationController
-    FILTERS = (Ticket::STATUSES + %w[active all]).freeze
     MAX_PER_PAGE = 100
 
     before_action :set_ticket, only: %i[show update close reopen screenshot]
@@ -9,7 +8,7 @@ module Trailticket
 
     # GET /tickets?status=active|all|open|...&page=1&per=25
     def index
-      filter = params[:status].presence_in(FILTERS) || "active"
+      filter = status_filter
       page = [params[:page].to_i, 1].max
       per = (params[:per].presence || 25).to_i.clamp(1, MAX_PER_PAGE)
 
@@ -97,6 +96,10 @@ module Trailticket
 
     def set_ticket
       @ticket = Ticket.find(params[:id])
+    end
+
+    def status_filter
+      params[:status].presence_in(Trailticket.config.statuses + %w[active all]) || "active"
     end
 
     def require_show!

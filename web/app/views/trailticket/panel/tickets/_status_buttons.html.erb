@@ -1,0 +1,11 @@
+<div class="tt-status-actions" role="group" aria-label="<%= tt('change_status') %>" data-tt-status-actions>
+  <span class="tt-muted"><%= tt('change_status') %>:</span>
+  <% Trailticket.config.statuses.each do |status| %>
+    <% if status == ticket.status %>
+      <span class="tt-button tt-current" aria-current="true"><%= status_label(status) %></span>
+    <% else %>
+      <%= button_to status_label(status), ticket_status_path(ticket), method: :patch,
+                    params: { status: status }, class: 'tt-button', form_class: 'tt-inline-form' %>
+    <% end %>
+  <% end %>
+</div>

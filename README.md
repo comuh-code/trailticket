@@ -7,13 +7,16 @@ the page URL, a screenshot, the path they took through the app, the fields they 
 any JavaScript errors — with passwords, tokens, card numbers and other sensitive data masked
 in the browser *and again* on the server.
 
-Trailticket has no UI of its own. It gives you:
+It gives you:
 
 - a mountable **JSON API** (tickets, replies, internal notes, status, assignee, close/reopen),
 - a **Ruby API** (`Trailticket.open_ticket`) and plain Active Record models,
-- a dependency-free **JavaScript collector** that records context and talks to the API.
+- a dependency-free **JavaScript collector** that records context and talks to the API,
+- an optional **web interface** for your team (kanban, list, ticket page), mounted like
+  Sidekiq Web — see [Web interface](#web-interface).
 
-You build the screens with whatever your app already uses — Bootstrap, Tailwind, Hotwire, React.
+The screens your users see (the "report a problem" form) you build with whatever your app
+already uses — Bootstrap, Tailwind, Hotwire, React.
 
 Requires Rails 7.1+ and Ruby 3.1+. Screenshots need Active Storage.
 
@@ -21,7 +24,7 @@ Requires Rails 7.1+ and Ruby 3.1+. Screenshots need Active Storage.
 
 ```ruby
 # Gemfile — pin a tag so updates are deliberate
-gem "trailticket", git: "https://github.com/comuh-code/trailticket.git", tag: "v0.1.0"
+gem "trailticket", git: "https://github.com/comuh-code/trailticket.git", tag: "v0.3.0"
 ```
 
 ```bash
@@ -65,6 +68,7 @@ end
 | `user_json` | id + name | `->(user)` how users appear in the API — keep it minimal |
 | `parent_controller` | `"ApplicationController"` | Use `"ActionController::API"` in API-only apps |
 | `access_denied` | 403 JSON | Block run when access is denied |
+| `statuses` | `open in_progress waiting closed` | Ordered statuses (and board columns). First is the initial one, last is final |
 | `on_ticket_created`, `on_message_created`, `on_status_changed` | `nil` | Hooks, run after commit |
 | `sensitive_fields` | pass, secret, token, card, cvv, cvc, cpf, cnpj, ssn, iban, otp, pin | Extra names to mask, on top of `filter_parameters` |
 | `capture_field_values` | `true` | `false` keeps only *which* fields were filled |
@@ -204,15 +208,112 @@ Trailticket::ContextSanitizer.clean_url("https://app.test/r?token=abc")
 # => "https://app.test/r?token=%5BFILTERED%5D"
 ```
 
+## Web interface
+
+A ready-made interface for whoever handles tickets: a **kanban** (drag cards between status
+columns), a **list** with search, filters and pagination, and a **ticket page** with the
+description, origin URL, navigation trail, the rest of the captured context and the ticket's
+**history**, where the team can also **reply** or add **internal notes**.
+
+It is a separate engine, so it can sit behind its own authentication while the API stays
+available to every user:
+
+```ruby
+# config/routes.rb
+mount Trailticket::Engine => "/trailticket"            # API used by the collector (all users)
+
+authenticate :user, ->(user) { user.staff? } do         # Devise
+  mount Trailticket::Web => "/admin/tickets"            # web interface (staff only)
+end
+```
+
+```ruby
+# config/initializers/trailticket.rb
+Trailticket.configure do |c|
+  # Required: the interface denies everyone until this returns true.
+  c.authorize = ->(request) { request.env["warden"].user&.staff? }
+
+  # Who is acting; stored as closed_by when a ticket reaches the final status.
+  c.current_actor = ->(request) { request.env["warden"].user }
+
+  # How authors and subjects (polymorphic) are shown.
+  c.author_label  = ->(user) { user.name }
+  c.subject_label = ->(record) { record.try(:name) || "#{record.class.name} ##{record.id}" }
+
+  # Board columns, in order. The last one is final (fills closed_at/closed_by).
+  c.statuses = %w[open in_progress waiting closed]
+
+  # Called on every status change, from the board, the ticket page or the API.
+  c.on_status_changed = ->(ticket, from, to) { TicketMailer.status(ticket, from, to).deliver_later }
+
+  # Optional: a partial of yours, rendered on the ticket page with a `ticket` local.
+  c.context_partial = "admin/tickets/context"
+end
+```
+
+| Option | Default | |
+| --- | --- | --- |
+| `authorize` | denies all | `->(request) { bool }` who may use the interface |
+| `current_actor` | `nil` | `->(request) { record }` stored as `closed_by` when closing |
+| `author_label` | `"Class #id"` | `->(record) { String }` |
+| `subject_label` | `"Class #id"` | `->(record) { String }` |
+| `statuses` | `open in_progress waiting closed` | Columns, in order; last is final |
+| `on_status_changed` | `nil` | `->(ticket, from, to)`, after commit |
+| `context_partial` | `nil` | Partial rendered on the ticket page with `ticket` |
+
+The interface does not use `can_open`/`can_manage`, `current_user_method` or
+`parent_controller`: those are for the JSON API. Its controllers inherit from
+`ActionController::Base`, with their own layout, CSS and JS served by the engine — nothing
+from your app's layout, asset pipeline, importmap, Hotwire or CSS framework is needed, and it
+works under a CSP without `unsafe-inline`.
+
+- **Status changes** are `PATCH` requests with the CSRF token. Moving to the final status
+  fills `closed_at` and `closed_by`; leaving it clears both. An invalid status returns 422 and
+  nothing is saved. On the ticket page there are buttons for each status, so it also works
+  without drag and drop (keyboard, touch screens).
+- **History**: the ticket page shows, in order, when it was opened, every status move
+  (including close/reopen), priority and assignee change with who did it, and every reply and
+  internal note. Changes are recorded in `trailticket_events` in the same transaction as the
+  change, whether they come from the interface (`current_actor`), the JSON API (the signed-in
+  user) or your own code — wrap it to record who did it:
+  ```ruby
+  Trailticket.with_actor(current_user) { ticket.update!(priority: "urgent") }
+  ```
+  Without an actor the entry shows "Someone".
+- **Replies and internal notes** are written by `current_actor` (required; without it the form
+  shows an error). Internal notes are never shown to the ticket's author through the API.
+  `on_message_created` runs for both.
+- **Safety**: all text is escaped; URLs only become links when they are `http`/`https`
+  (`javascript:` and others are shown as text); field values are shown exactly as the
+  sanitizer stored them.
+- **Translations**: English and Brazilian Portuguese are included (`trailticket.web.*`,
+  `trailticket.statuses.*`, `trailticket.priorities.*`). Add your own locale file to translate
+  further or to name custom statuses.
+- **Customizing views**: copy any template from the gem's
+  `web/app/views/trailticket/panel/` to the same path in your app's `app/views/` to override it.
+
+### Seeing it locally
+
+The dummy app in `spec/dummy` mounts the interface at `/chamados` with ~15 sample tickets:
+
+```bash
+docker compose run --rm -p 3000:3000 devcontainer bin/dummy
+# open http://localhost:3000/chamados
+```
+
+Data lives in `spec/dummy/db/development.sqlite3`; delete it to start over.
+
 ## Versioning
 
 [SemVer](https://semver.org). Point your apps at a tag; an app only gets changes when you
 bump its tag. To release:
 
 1. Bump `lib/trailticket/version.rb` and add an entry to `CHANGELOG.md`
-2. `git commit -am "Release v0.2.0" && git tag v0.2.0 && git push --follow-tags`
+2. Commit, then `git tag -a v0.3.0 -m "v0.3.0" && git push --follow-tags`
+   (annotated tag: `--follow-tags` does not push lightweight ones)
 3. In each app: update the tag, `bundle update trailticket`, then
    `bin/rails trailticket:install:migrations && bin/rails db:migrate` if there are new migrations
+   (0.3.0 adds one: `trailticket_events`, for the ticket history)
 
 ## Development
 
@@ -227,7 +328,8 @@ rubocop                              # or: bundle exec rubocop
 
 You can also use VS Code/Cursor: "Dev Containers: Reopen in Container".
 
-Specs run against a dummy app in `spec/dummy`.
+Specs run against a dummy app in `spec/dummy`. To browse the web interface with sample data,
+see [Seeing it locally](#seeing-it-locally).
 
 ## License
 
