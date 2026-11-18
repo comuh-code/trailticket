@@ -70,5 +70,50 @@ RSpec.describe Trailticket::Ticket do
       expect(ticket).not_to be_persisted
       expect(ticket.errors).to include(:screenshot)
     end
+
+    it 'stores metadata in the context with string keys, without sanitizing it' do
+      ticket = Trailticket.open_ticket(
+        author: member, title: 'Bug', body: 'Broken',
+        context: { page: { url: 'https://app.test/x' } },
+        metadata: { comuhub: { admin: 1, comunidade: 'Centro', token: 'kept' } }
+      )
+
+      expect(ticket).to be_persisted
+      expect(ticket.reload.context).to include(
+        'page' => { 'url' => 'https://app.test/x' },
+        'comuhub' => { 'admin' => 1, 'comunidade' => 'Centro', 'token' => 'kept' }
+      )
+    end
+
+    it 'raises when metadata uses a reserved context key' do
+      %i[page trail fields errors].each do |key|
+        expect do
+          Trailticket.open_ticket(author: member, title: 'Bug', body: 'Broken',
+                                  metadata: { key => {} })
+        end.to raise_error(ArgumentError, /#{key}/)
+      end
+      expect(described_class.count).to eq(0)
+    end
+
+    it 'uses the given page_url, cleaned, instead of the context one' do
+      ticket = Trailticket.open_ticket(
+        author: member, title: 'Bug', body: 'Broken',
+        context: { page: { url: 'https://app.test/from-context' } },
+        page_url: 'https://app.test/given?password=abc&step=2'
+      )
+
+      expect(ticket.page_url).to eq('https://app.test/given?password=%5BFILTERED%5D&step=2')
+      expect(ticket.context.dig('page', 'url')).to eq('https://app.test/from-context')
+    end
+
+    it 'keeps the previous behavior without page_url and metadata' do
+      ticket = Trailticket.open_ticket(
+        author: member, title: 'Bug', body: 'Broken',
+        context: { page: { url: 'https://app.test/x' }, extra: 'dropped' }
+      )
+
+      expect(ticket.page_url).to eq('https://app.test/x')
+      expect(ticket.context).to eq('page' => { 'url' => 'https://app.test/x' })
+    end
   end
 end

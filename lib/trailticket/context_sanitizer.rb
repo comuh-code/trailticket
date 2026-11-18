@@ -17,6 +17,12 @@ module Trailticket
       new(raw, config).call
     end
 
+    #   Trailticket::ContextSanitizer.clean_url("https://a.test/?token=abc")
+    #   # => "https://a.test/?token=%5BFILTERED%5D"
+    def self.clean_url(url, config: Trailticket.config)
+      new({}, config).clean_url(url)
+    end
+
     def initialize(raw, config)
       @raw = normalize(raw)
       @config = config

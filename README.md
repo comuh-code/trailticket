@@ -109,6 +109,9 @@ Trailticket.start({
 // When the user clicks "Report a problem" — BEFORE opening your form,
 // so the screenshot and fields show the page, not the form.
 const snapshot = await Trailticket.capture()
+// If capture() may run before start() (e.g. start() lives in another bundle),
+// pass the same options, otherwise the collector starts with the defaults:
+//   await Trailticket.capture({ captureValues: false })
 
 // ...after the user writes the description in your own form:
 const ticket = await Trailticket.submit({ title, body, priority: "high" }, snapshot)
@@ -180,12 +183,25 @@ ticket = Trailticket.open_ticket(
   body: "The CSV import stopped at row 120",
   context: { page: { url: request.url } },  # same shape as the collector's
   screenshot: params[:screenshot],          # data URL or uploaded file, optional
-  subject: current_account                  # optional polymorphic link
+  subject: current_account,                 # optional polymorphic link
+  page_url: request.referer,                # optional, cleaned; overrides context.page.url
+  metadata: { myapp: { plan: "pro" } }      # optional, stored as-is in context
 )
 ticket.persisted? # => true / false with ticket.errors
 
 Trailticket::Ticket.active.where(assignee: current_admin)
 Trailticket::TicketPolicy.new(current_admin, ticket).manage?
+```
+
+`metadata` is trusted server data: it skips the sanitizer and is merged into `ticket.context`
+with string keys. It cannot use the reserved keys `page`, `trail`, `fields` or `errors`
+(raises `ArgumentError`).
+
+To clean a URL the same way the server does:
+
+```ruby
+Trailticket::ContextSanitizer.clean_url("https://app.test/r?token=abc")
+# => "https://app.test/r?token=%5BFILTERED%5D"
 ```
 
 ## Versioning

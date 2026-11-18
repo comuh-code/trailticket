@@ -25,8 +25,6 @@ class CreateTrailticketTickets < ActiveRecord::Migration[7.1]
 
   private
 
-  # Follows the app's primary key type (e.g. uuid). If your user table uses a
-  # different key type, adjust the copied migration.
   def primary_key_type
     Rails.configuration.generators.options.dig(:active_record, :primary_key_type) || :primary_key
   end

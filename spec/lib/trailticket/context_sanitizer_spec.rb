@@ -49,6 +49,17 @@ RSpec.describe Trailticket::ContextSanitizer do
       .to eq('https://a.test/r?reset_password_token=%5BFILTERED%5D&page=2')
   end
 
+  describe '.clean_url' do
+    it 'masks sensitive query params' do
+      expect(described_class.clean_url('https://a.test/r?token=abc&page=2'))
+        .to eq('https://a.test/r?token=%5BFILTERED%5D&page=2')
+    end
+
+    it 'leaves urls without query untouched' do
+      expect(described_class.clean_url('https://a.test/r')).to eq('https://a.test/r')
+    end
+  end
+
   it 'caps lists and truncates strings' do
     out = sanitize(trail: Array.new(80) { |i| { type: 'click', label: 'x' * 1000, at: i.to_s } })
 

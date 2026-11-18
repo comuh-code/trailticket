@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.0] - 2026-11-18
+
+### Added
+- `Trailticket.open_ticket` / `OpenTicket`: `metadata:` to store the app's own data in the
+  ticket context (trusted, not sanitized; reserved keys `page`, `trail`, `fields`, `errors`
+  raise `ArgumentError`) and `page_url:` to set the ticket URL (cleaned) instead of `context.page.url`
+- `Trailticket::ContextSanitizer.clean_url(url)` class method
+
+### Fixed
+- JS: `capture(options)` accepts options; when it runs before `start()` the collector now starts
+  with them instead of the defaults (e.g. honouring `captureValues: false`)
+
+### Changed
+- Removed comments from the migrations copied into the app
+
 ## [0.1.0] - 2026-11-05
 
 ### Added

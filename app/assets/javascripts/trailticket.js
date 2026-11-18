@@ -10,6 +10,10 @@
 //   // ...show your form, then:
 //   await Trailticket.submit({ title, body, priority }, snapshot)
 //
+// If capture() can run before start(), pass it the same options — otherwise the
+// collector starts with the defaults (e.g. captureValues: true):
+//   await Trailticket.capture({ captureValues: false })
+//
 // Mark your report modal with data-trailticket-ignore so it is not recorded,
 // and anything that must never leave the browser with data-trailticket-mask.
 
@@ -53,8 +57,9 @@ export function start(options = {}) {
 }
 
 // Takes a snapshot of where the user is. Call it before opening your form.
-export async function capture() {
-  if (!state.started) start(state.options)
+// options are only used if start() has not been called yet.
+export async function capture(options = {}) {
+  if (!state.started) start({ ...state.options, ...options })
 
   const context = {
     page: {

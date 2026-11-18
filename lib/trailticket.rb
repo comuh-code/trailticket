@@ -26,8 +26,11 @@ module Trailticket
     # Ruby API for apps that open tickets from their own code.
     #
     #   Trailticket.open_ticket(author: current_user, title: "...", body: "...",
-    #                           context: params[:context], screenshot: params[:screenshot])
+    #                           context: params[:context], screenshot: params[:screenshot],
+    #                           page_url: request.referer, metadata: { "myapp" => { ... } })
     #
+    # metadata is trusted server data, merged into the context without sanitizing;
+    # it cannot use the keys page, trail, fields or errors (ArgumentError).
     # Returns the ticket; check #persisted? and #errors.
     def open_ticket(**attributes)
       Trailticket::OpenTicket.call(**attributes)
