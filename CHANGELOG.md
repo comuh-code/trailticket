@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.6.6] - 2026-11-18
+
+### Changed
+- Removed the "Tickets" title next to the Board/List tabs: inside the host app's layout, which
+  usually has its own title, it showed the name twice
+
 ## [0.6.5] - 2026-11-18
 
 ### Changed

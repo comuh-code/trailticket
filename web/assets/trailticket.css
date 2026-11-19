@@ -125,10 +125,6 @@ body.tt { margin: 0; }
   display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px;
   padding: 24px 32px 0; max-width: 1440px; margin: 0 auto;
 }
-.tt-brand {
-  font: 700 24px/32px var(--tt-font); letter-spacing: -0.02em;
-  color: var(--tt-text) !important; text-decoration: none;
-}
 .tt-nav { display: flex; gap: 4px; padding: 4px; border-radius: var(--tt-radius-pill); background: var(--tt-surface-2); }
 .tt-nav-link {
   display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px;

@@ -13,7 +13,6 @@
     %script{src: web_asset_path('trailticket.js', v: web_asset_version('trailticket.js')), defer: true}
   %body.tt{data: { tt_theme: web_theme }}
     %header.tt-toolbar
-      %a.tt-brand{href: root_path}= tt('title')
       %nav.tt-nav{aria: { label: tt('title') }}
         = link_to tt('board'), root_path, class: 'tt-nav-link',
                   aria: { current: (controller.action_name == 'board' ? 'page' : nil) }
