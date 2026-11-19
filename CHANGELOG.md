@@ -1,6 +1,11 @@
 # Changelog
 
-## [0.6.1] - 2026-11-20
+## [0.6.2] - 2026-11-18
+
+### Fixed
+- Release dates in this changelog: 0.4.0 to 0.6.1 were all released on 2026-11-18
+
+## [0.6.1] - 2026-11-18
 
 ### Added
 - The board has the list's filters: search, priority and assignee (anyone, assigned to me,
@@ -8,21 +13,21 @@
   live in the URL (e.g. `/admin/tickets?assignee=me`). Status and archived stay list-only: each
   column is a status and the board never shows archived tickets
 
-## [0.6.0] - 2026-11-20
+## [0.6.0] - 2026-11-18
 
 ### Added
 - Assignee column in the ticket list
 - Assignee filter in the list: anyone, assigned to me, unassigned or a specific person
 - The ticket page shows who set the current assignee and when ("set by Sergio · …")
 
-## [0.5.3] - 2026-11-20
+## [0.5.3] - 2026-11-18
 
 ### Changed
 - The web interface's views are HAML (`.html.haml`) instead of ERB; the rendered HTML is the
   same. trailticket now depends on the `haml` gem, which it loads itself, so host apps don't
   need to use HAML. Views overridden by the app can be ERB or HAML
 
-## [0.5.2] - 2026-11-20
+## [0.5.2] - 2026-11-18
 
 ### Added
 - Light and dark themes for the web interface: `config.web_theme` (`"auto"`, the default, follows
@@ -39,7 +44,7 @@
   leak styles into (or inherit them from) the host app. Custom views that relied on the old token
   names (`--tt-low`, `--tt-high`...) need the new ones
 
-## [0.5.1] - 2026-11-20
+## [0.5.1] - 2026-11-18
 
 ### Changed
 - Code follows the project's RuboCop config (compact `class Trailticket::X` style, single
@@ -50,7 +55,7 @@
 - Engine classes inherit explicitly from `Trailticket::ApplicationRecord` and
   `Trailticket::ApplicationController`
 
-## [0.5.0] - 2026-11-20
+## [0.5.0] - 2026-11-18
 
 ### Added
 - Triage (`config.triage`, off by default): tickets start in `initial_status` without a
@@ -69,7 +74,7 @@
 ### Upgrading
 - New migration: `bin/rails trailticket:install:migrations && bin/rails db:migrate`
 
-## [0.4.0] - 2026-11-19
+## [0.4.0] - 2026-11-18
 
 ### Added
 - `initial_status` and `final_statuses` config. Several final statuses are supported
