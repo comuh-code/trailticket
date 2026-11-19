@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.3] - 2026-11-18
+
+### Changed
+- Removed explanatory comments from the code and specs. The configuration docs
+  (`lib/trailticket/configuration.rb` and the install generator's initializer) are kept. No
+  behavior change
+
 ## [0.6.2] - 2026-11-18
 
 ### Fixed

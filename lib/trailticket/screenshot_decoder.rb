@@ -3,9 +3,6 @@
 require 'base64'
 require 'stringio'
 
-# Accepts a data URL ("data:image/jpeg;base64,...") or an uploaded file and
-# returns attributes for Active Storage's #attach. Checks size, declared
-# type and the file's magic bytes.
 class Trailticket::ScreenshotDecoder
   DATA_URL = %r{\Adata:(image/[a-z+.-]+);base64,(.+)\z}m
   EXTENSIONS = { 'image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp' }.freeze

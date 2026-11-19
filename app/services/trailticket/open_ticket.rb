@@ -8,7 +8,6 @@ class Trailticket::OpenTicket
     new(**attributes).call
   end
 
-  # author:, title: and body: are required; the rest are OPTIONS (unknown keys raise).
   def initialize(author:, title:, body:, **options)
     options.assert_valid_keys(*OPTIONS)
     OPTIONS.each { |name| instance_variable_set(:"@#{name}", options[name]) }
@@ -37,7 +36,6 @@ class Trailticket::OpenTicket
       context['page'] ||= {}
       context['page']['user_agent'] ||= @user_agent.to_s[0, 500]
     end
-    # metadata is trusted server data: merged after sanitization, never through it.
     context.merge(@metadata)
   end
 
@@ -57,8 +55,6 @@ class Trailticket::OpenTicket
     metadata
   end
 
-  # With triage, what the user picked is only a suggestion (unknown values are
-  # dropped); the team sets the real priority.
   def assign_priority(ticket)
     if Trailticket.config.triage
       ticket.suggested_priority = @priority.to_s.presence_in(Trailticket::Ticket::PRIORITIES)
@@ -67,7 +63,6 @@ class Trailticket::OpenTicket
     end
   end
 
-  # Not saved: the ticket comes back with every validation error plus the screenshot's.
   def screenshot_rejected(ticket, error)
     ticket.validate
     ticket.errors.add(:screenshot, error)

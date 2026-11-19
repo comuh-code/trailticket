@@ -1,12 +1,8 @@
 # frozen_string_literal: true
 
-# The kanban: one column per status, built from an already filtered scope.
-# Final columns only show tickets closed in the last config.board_closed_days days.
 class Trailticket::Panel::Board
   LIMIT = 50
 
-  # tickets: cards shown; shown: tickets in the column (within the closed window);
-  # total: every ticket of the scope with that status, for the "see all" link.
   Column = Struct.new(:status, :tickets, :shown, :total, :window, keyword_init: true)
 
   def initialize(scope)
@@ -29,8 +25,6 @@ class Trailticket::Panel::Board
                tickets: cards.to_a)
   end
 
-  # Work columns are a queue (most urgent, then oldest first); final columns show
-  # the most recently closed first.
   def order(scope, final)
     final ? scope.order(closed_at: :desc, id: :desc) : scope.by_priority.order(:created_at, :id)
   end

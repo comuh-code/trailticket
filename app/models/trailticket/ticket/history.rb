@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-# Records status, priority, assignee and archive changes in trailticket_events,
-# with Trailticket::Current.actor, in the same transaction as the change.
 module Trailticket::Ticket::History
   extend ActiveSupport::Concern
 
@@ -9,7 +7,6 @@ module Trailticket::Ticket::History
     has_many :events, -> { order(:created_at, :id) },
              dependent: :delete_all, inverse_of: :ticket
 
-    # Needs the trailticket_events migration; without it updates fail loudly.
     after_update :record_history
   end
 
@@ -34,7 +31,6 @@ module Trailticket::Ticket::History
 
   def record_archive_event
     from, to = saved_change_to_archived_at
-    # Reopening clears archived_at too; the status event already tells that story.
     return if to.nil? && saved_change_to_status?
 
     record_event(to ? 'archived' : 'unarchived', from&.iso8601, to&.iso8601)

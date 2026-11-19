@@ -4,19 +4,16 @@ class Trailticket::Ticket < Trailticket::ApplicationRecord
   include Archiving
   include History
 
-  # Default statuses. The list in use is Trailticket.config.statuses.
   STATUSES = Trailticket::Configuration::DEFAULT_STATUSES
   PRIORITIES = %w[low normal high urgent].freeze
 
   belongs_to :author, polymorphic: true
   belongs_to :assignee, polymorphic: true, optional: true
   belongs_to :closed_by, polymorphic: true, optional: true
-  # Optional link to something in the host app (an account, a project...).
   belongs_to :subject, polymorphic: true, optional: true
 
   has_many :messages, -> { order(:created_at) }, dependent: :destroy, inverse_of: :ticket
 
-  # Needs Active Storage in the host app; without it tickets simply have no screenshot.
   has_one_attached :screenshot if respond_to?(:has_one_attached)
 
   attribute :context, :json, default: -> { {} }
@@ -33,7 +30,6 @@ class Trailticket::Ticket < Trailticket::ApplicationRecord
   validate :prioritized_before_leaving_triage
 
   scope :active, -> { where.not(status: final_statuses) }
-  # Most urgent first, tickets without a priority (in triage) last.
   scope :by_priority, lambda {
     ranks = PRIORITIES.reverse.each_with_index.map { |name, rank| "WHEN '#{name}' THEN #{rank}" }
     order(Arel.sql("CASE #{table_name}.priority #{ranks.join(' ')} ELSE #{PRIORITIES.size} END"))
@@ -52,7 +48,6 @@ class Trailticket::Ticket < Trailticket::ApplicationRecord
     Trailticket.config.final_statuses
   end
 
-  # The final status used by close! (the first of final_statuses).
   def self.final_status
     final_statuses.first
   end
@@ -62,7 +57,6 @@ class Trailticket::Ticket < Trailticket::ApplicationRecord
   end
   alias status_closed? final_status?
 
-  # Moving from a non-final status into a final one.
   def closing?
     will_save_change_to_status? && final_status? &&
       self.class.final_statuses.exclude?(status_in_database)
@@ -76,7 +70,6 @@ class Trailticket::Ticket < Trailticket::ApplicationRecord
     method_defined?(:screenshot)
   end
 
-  # In triage: waiting for someone to set the priority.
   def needs_triage?
     Trailticket.config.triage && priority.nil?
   end
@@ -106,8 +99,6 @@ class Trailticket::Ticket < Trailticket::ApplicationRecord
     end
   end
 
-  # With triage on, a ticket leaves the initial status for a non-final one only
-  # after it has a priority. Going straight to a final status (e.g. cancelled) is fine.
   def prioritized_before_leaving_triage
     return unless Trailticket.config.triage && priority.nil? && will_save_change_to_status?
     return unless status_in_database == self.class.initial_status && !final_status?
@@ -130,7 +121,6 @@ class Trailticket::Ticket < Trailticket::ApplicationRecord
 
     from, to = saved_change_to_status
     args = [self, from, to, @status_actor]
-    # Hooks written for 0.3 take (ticket, from, to).
     hook.call(*(hook.arity.between?(0, 3) ? args.first(hook.arity) : args))
   end
 end

@@ -1,13 +1,10 @@
 # frozen_string_literal: true
 
-# Priority and assignee, set from the ticket page (the triage step).
 class Trailticket::Panel::DetailsController < Trailticket::Panel::ApplicationController
   before_action { @ticket = Trailticket::Ticket.find(params.fetch(:id)) }
 
-  # PATCH /tickets/:id/details  priority=high&assignee=Admin:3
   def update
     priority = params.fetch(:priority, '').to_s
-    # The priority can be set or changed here, never cleared.
     @ticket.priority = priority if priority.present?
     if params.key?(:assignee)
       assignee = find_assignee(params.fetch(:assignee).to_s)
@@ -21,8 +18,6 @@ class Trailticket::Panel::DetailsController < Trailticket::Panel::ApplicationCon
 
   private
 
-  # nil for "Nobody"; false when the key is not one of the options. Keeping the
-  # current assignee is fine even if it is no longer an option.
   def find_assignee(key)
     return nil if key.empty?
     return @ticket.assignee if key == assignee_key(@ticket.assignee)

@@ -1,9 +1,6 @@
 # frozen_string_literal: true
 
-# Living reference of the panel's tokens and components, rendered with the same
-# CSS and helpers as the real pages. Behind config.authorize like the rest.
 class Trailticket::Panel::DesignSystemController < Trailticket::Panel::ApplicationController
-  # name, light, dark, usage key (trailticket.web.design.tokens.*)
   COLOR_TOKENS = [
     %w[--tt-bg #f6f7f9 #0f1115 bg],
     %w[--tt-surface #ffffff #171a20 surface],

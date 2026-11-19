@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class ApplicationController < ActionController::Base
-  # In tests the "session" comes from a header.
   def current_admin
     return @current_admin if defined?(@current_admin)
 

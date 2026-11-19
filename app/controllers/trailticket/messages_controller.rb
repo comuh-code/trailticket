@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class Trailticket::MessagesController < Trailticket::ApplicationController
-  # POST /tickets/:ticket_id/messages  { message: { body, internal } }
   def create
     ticket = Trailticket::Ticket.find(params[:ticket_id])
     policy = ticket_policy(ticket)
@@ -19,7 +18,6 @@ class Trailticket::MessagesController < Trailticket::ApplicationController
 
   private
 
-  # Only managers can write internal notes; anyone else's flag is ignored.
   def internal_param?
     ActiveModel::Type::Boolean.new.cast(params.dig(:message, :internal)) == true
   end

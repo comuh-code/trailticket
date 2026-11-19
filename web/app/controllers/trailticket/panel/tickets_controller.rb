@@ -5,15 +5,12 @@ class Trailticket::Panel::TicketsController < Trailticket::Panel::ApplicationCon
 
   before_action :set_ticket, only: %i[show status screenshot]
 
-  # GET /?q=&priority=&assignee=  — one column per status, with the list's filters
-  # except status (each column is one) and archived (the board never shows them).
   def board
     filter = ticket_filter(params.except(:status, :archived))
     @filters = filter.to_h
     @columns = Trailticket::Panel::Board.new(filter.scope).columns
   end
 
-  # GET /list?q=&status=&priority=&assignee=&archived=&page=
   def index
     filter = ticket_filter(params)
     @filters = filter.to_h
@@ -24,7 +21,6 @@ class Trailticket::Panel::TicketsController < Trailticket::Panel::ApplicationCon
     render_ticket_page
   end
 
-  # PATCH /tickets/:id/status  status=...  (HTML form or JSON from the board)
   def status
     @ticket.status = params.fetch(:status, '').to_s
     @ticket.closed_by = current_actor if @ticket.closing?
@@ -39,7 +35,6 @@ class Trailticket::Panel::TicketsController < Trailticket::Panel::ApplicationCon
     end
   end
 
-  # The screenshot goes through the same authorization as the page.
   def screenshot
     return head(:not_found) unless @ticket.screenshot?
 

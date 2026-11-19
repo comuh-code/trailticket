@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-# Replies and internal notes written on the ticket page.
 class Trailticket::Panel::MessagesController < Trailticket::Panel::ApplicationController
-  # POST /tickets/:ticket_id/messages  body=...&internal=1
   def create
     @ticket = Trailticket::Ticket.find(params.fetch(:ticket_id))
     @reply = build_reply

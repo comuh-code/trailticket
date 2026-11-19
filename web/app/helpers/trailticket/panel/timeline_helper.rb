@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
-# The ticket history: opening, recorded events and messages in one list.
 module Trailticket::Panel::TimelineHelper
   TimelineEntry = Struct.new(:kind, :at, :record, keyword_init: true)
 
-  # Opening, history events and messages, oldest first.
   def ticket_timeline(ticket, events, messages)
     entries = [TimelineEntry.new(kind: :created, at: ticket.created_at, record: ticket)]
     entries += events.map { |event| entry(:event, event) }
@@ -12,12 +10,10 @@ module Trailticket::Panel::TimelineHelper
     entries.sort_by.with_index { |entry, index| [entry.at || Time.current, index] }
   end
 
-  # The last assignee change: who set (or changed) the current assignee, and when.
   def last_assignment(events)
     events.reverse_each.find { |event| event.action == 'assignee_changed' }
   end
 
-  # One sentence per event. The *_html translations escape every interpolated value.
   def event_sentence(event)
     actor = event.actor ? author_label(event.actor) : tt('timeline.someone')
     key, from, to = event_parts(event)
@@ -50,7 +46,6 @@ module Trailticket::Panel::TimelineHelper
     [key, status_label(event.from), status_label(event.to)]
   end
 
-  # Assignee stored as { "type", "id" }; the record may be gone since.
   def referenced_label(ref)
     unless ref.is_a?(Hash) && ref['type'].present?
       return Trailticket::Panel::ApplicationHelper::EMPTY

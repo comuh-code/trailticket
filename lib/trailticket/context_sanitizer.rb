@@ -3,9 +3,6 @@
 require 'uri'
 require 'json'
 
-# Never trust the browser: the collector already masks sensitive data, but
-# this runs again on the server with the app's own filter_parameters.
-# Only known keys survive, lists are capped and strings are truncated.
 class Trailticket::ContextSanitizer
   MASK = '[FILTERED]'
   PAGE_KEYS = %w[url referrer title user_agent language timezone viewport screen
@@ -19,8 +16,6 @@ class Trailticket::ContextSanitizer
     new(raw, config).call
   end
 
-  #   Trailticket::ContextSanitizer.clean_url("https://a.test/?token=abc")
-  #   # => "https://a.test/?token=%5BFILTERED%5D"
   def self.clean_url(url, config: Trailticket.config)
     new({}, config).clean_url(url)
   end
@@ -107,7 +102,6 @@ class Trailticket::ContextSanitizer
       sensitive?(out['name']) || sensitive?(out['label'])
   end
 
-  # MASK when masked; the (truncated) value only if the app keeps field values.
   def field_value(raw, masked)
     return MASK if masked
     return unless @config.capture_field_values && !raw['value'].nil? && !raw['value'].is_a?(Hash)

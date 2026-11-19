@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-# Takes done tickets off the board and the default list. Only tickets in a
-# final status can be archived; reopening one brings it back.
 module Trailticket::Ticket::Archiving
   extend ActiveSupport::Concern
 

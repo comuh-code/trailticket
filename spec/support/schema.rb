@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-# O banco de teste é SQLite em memória: monta o schema a cada execução.
 ActiveRecord::Migration.verbose = false
 
 ActiveRecord::Schema.define do
@@ -13,7 +12,6 @@ ActiveRecord::Schema.define do
     t.string :name
   end
 
-  # The host app's own Message (spec/dummy/app/models/message.rb).
   create_table :messages, force: true do |t|
     t.string :text
   end

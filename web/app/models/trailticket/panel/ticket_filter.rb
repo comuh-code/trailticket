@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-# Search and filters of the ticket list. Optional and forgiving: unknown values
-# are ignored, not an error.
 class Trailticket::Panel::TicketFilter
   ARCHIVED = %w[only all].freeze
   PRIORITIES = (Trailticket::Ticket::PRIORITIES + ['none']).freeze
@@ -10,8 +8,6 @@ class Trailticket::Panel::TicketFilter
 
   attr_reader :to_h
 
-  # actor: who is looking ("me"); assignee_keys: "Class:id" of the people the
-  # assignee filter offers.
   def initialize(params, actor: nil, assignee_keys: [])
     @actor = actor
     @to_h = {
@@ -34,7 +30,6 @@ class Trailticket::Panel::TicketFilter
 
   private
 
-  # Plain text, not a LIKE pattern; ILIKE on PostgreSQL, LIKE elsewhere.
   def search(scope)
     pattern = "%#{Trailticket::Ticket.sanitize_sql_like(to_h[:q])}%"
     scope.where(Trailticket::Ticket.arel_table[:title].matches(pattern, '\\'))
@@ -50,7 +45,6 @@ class Trailticket::Panel::TicketFilter
     end
   end
 
-  # Archived tickets are left out unless asked for.
   def archive_scope
     case to_h[:archived]
     when 'only' then Trailticket::Ticket.archived

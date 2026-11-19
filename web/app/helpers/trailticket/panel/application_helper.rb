@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-# Everything here returns plain strings or tags built with content_tag, so user
-# data is always escaped. Nothing calls html_safe or raw.
 module Trailticket::Panel::ApplicationHelper
   SAFE_SCHEMES = %w[http https].freeze
   MAX_DEPTH = 8
@@ -40,7 +38,6 @@ module Trailticket::Panel::ApplicationHelper
                 class: "tt-badge tt-priority-#{key}")
   end
 
-  # "No priority (suggested: High)" while in triage.
   def triage_badge(ticket)
     return priority_badge(ticket.priority) unless ticket.priority.nil?
 
@@ -58,7 +55,6 @@ module Trailticket::Panel::ApplicationHelper
     time_tag(time, time.strftime('%Y-%m-%d %H:%M'))
   end
 
-  # Only http(s) URLs become links. javascript:, data: and anything else is text.
   def safe_link(url, text = url)
     return EMPTY if url.blank?
     return text.to_s unless safe_url?(url)
@@ -77,12 +73,10 @@ module Trailticket::Panel::ApplicationHelper
     Array(trail).grep(Hash)
   end
 
-  # Everything in the context except the trail, which has its own section.
   def ticket_context(ticket)
     ticket.context.is_a?(Hash) ? ticket.context.except('trail') : {}
   end
 
-  # Renders any JSON value as nested key → value lists.
   def context_value(value, depth = 0)
     return muted('…') if depth > MAX_DEPTH
 

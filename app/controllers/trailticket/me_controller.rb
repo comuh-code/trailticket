@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-# What the signed-in user can do. Frontends use it to decide what to show.
 class Trailticket::MeController < Trailticket::ApplicationController
   def show
     policy = ticket_policy

@@ -17,7 +17,7 @@ RSpec.describe Trailticket::ContextSanitizer do
                      { name: 'user[password]', value: 'hunter2' },
                      { name: 'doc', label: 'CPF', value: '123' },
                      { name: 'contact', value: 'x', masked: true },
-                     { name: 'user[email]', value: 'a@b.c' }, # filter_parameters do app host
+                     { name: 'user[email]', value: 'a@b.c' },
                      { name: 'pw', type: 'password', value: 's' }
                    ])
     values = out['fields'].to_h { |field| [field['name'], field['value']] }

@@ -1,5 +1,3 @@
--# Filters of the list and the board. On the board (board: true) status and
--# archived are left out: each column is a status and archived tickets never show.
 - board = local_assigns.fetch(:board, false)
 = form_with url: url, method: :get, class: 'tt-filters', role: 'search',
             skip_enforcing_utf8: true, data: { tt_filters: true } do

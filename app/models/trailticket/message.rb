@@ -6,7 +6,6 @@ class Trailticket::Message < Trailticket::ApplicationRecord
 
   validates :body, presence: true
 
-  # Internal notes are only visible to whoever handles tickets.
   scope :public_only, -> { where(internal: false) }
 
   after_create_commit :notify_created

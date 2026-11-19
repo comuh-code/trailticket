@@ -372,7 +372,7 @@ RSpec.describe 'Trailticket web interface' do
 
     before do
       Trailticket.with_actor(paula) { mine.update!(assignee: agent) }
-      paulas.update!(assignee: paula) # no known actor
+      paulas.update!(assignee: paula)
     end
 
     def list_titles(params)

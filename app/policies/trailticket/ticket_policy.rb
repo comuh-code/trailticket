@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-# Roles come from the host app (config.can_open / config.can_manage);
-# this class only combines them with ticket authorship.
 class Trailticket::TicketPolicy
   attr_reader :user, :ticket
 
@@ -30,7 +28,6 @@ class Trailticket::TicketPolicy
     manage? || author?
   end
 
-  # Authors can reply while the ticket is not closed.
   def reply?
     manage? || (author? && !ticket.status_closed?)
   end

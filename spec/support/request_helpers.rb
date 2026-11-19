@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 module RequestHelpers
-  # No dummy app a "sessão" vem de um header.
   def auth(user)
     { 'X-Admin-Id' => user.id.to_s }
   end

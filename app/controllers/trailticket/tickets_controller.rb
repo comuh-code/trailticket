@@ -7,7 +7,6 @@ class Trailticket::TicketsController < Trailticket::ApplicationController
   before_action :require_show!, only: %i[show screenshot]
   before_action :require_manage!, only: %i[update close reopen]
 
-  # GET /tickets?status=active|all|open|...&page=1&per=25
   def index
     filter = status_filter
     page, per = pagination
@@ -26,8 +25,6 @@ class Trailticket::TicketsController < Trailticket::ApplicationController
     render json: serialize(@ticket, details: true)
   end
 
-  # POST /tickets  { ticket: { title, body, priority, context, screenshot } }
-  # screenshot: data URL string or multipart file. context: object or JSON string.
   def create
     return trailticket_deny! unless ticket_policy.create?
 
@@ -35,7 +32,6 @@ class Trailticket::TicketsController < Trailticket::ApplicationController
     respond_with_ticket(ticket.persisted?, ticket, status: :created)
   end
 
-  # PATCH /tickets/:id  { ticket: { status, priority, assignee_id } }
   def update
     attrs = params.require(:ticket).permit(:status, :priority, :assignee_id)
     @ticket.assign_attributes(attrs.slice(:status, :priority))
@@ -58,7 +54,6 @@ class Trailticket::TicketsController < Trailticket::ApplicationController
     render json: serialize(@ticket, details: true)
   end
 
-  # Served through the engine so the same permissions apply to the image.
   def screenshot
     return head(:not_found) unless @ticket.screenshot?
 
@@ -83,7 +78,6 @@ class Trailticket::TicketsController < Trailticket::ApplicationController
     end
   end
 
-  # POST /tickets  { ticket: { title, body, priority, context, screenshot } }
   def new_ticket_attributes
     attrs = params.require(:ticket)
     fields = %i[title body priority context screenshot].index_with { |key| attrs[key] }

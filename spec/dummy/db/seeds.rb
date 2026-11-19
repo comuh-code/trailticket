@@ -1,5 +1,3 @@
-# Sample data for the local web interface (bin/dummy). Runs once: skipped if
-# there are tickets already. Delete db/development.sqlite3 to start over.
 return if Trailticket::Ticket.exists?
 
 agent = Admin.create!(name: "Sergio (suporte)", role: "agent")
@@ -109,7 +107,6 @@ samples = [
     body: "O membro aceitou mas continua como pendente.",
     priority: "normal", status: "open", days: 2, path: "/membros?status=pendente"
   },
-  # Shows that user text is escaped and javascript: URLs never become links.
   {
     title: '<script>alert("xss")</script> título com HTML',
     body: '<img src=x onerror=alert(1)> o corpo também é escapado',
@@ -121,10 +118,8 @@ samples = [
   }
 ]
 
-# Changes below are recorded in each ticket's history as made by the agent.
 Trailticket::Current.actor = agent
 
-# Samples use generic stages; map them to whatever statuses are configured.
 config = Trailticket.config
 work = config.statuses - [config.initial_status] - config.final_statuses
 stage_status = lambda do |sample, i|
@@ -143,7 +138,6 @@ samples.each_with_index do |sample, i|
     subject: (communities[i % communities.size] unless (i % 4).zero?),
     title: sample[:title],
     body: sample[:body],
-    # Urgent ones start as high and get escalated, to show it in the history.
     priority: sample[:priority] == "urgent" ? "high" : sample[:priority],
     user_agent: "Mozilla/5.0 (X11; Linux x86_64) Firefox/140.0",
     context: {
@@ -162,12 +156,9 @@ samples.each_with_index do |sample, i|
     ticket.messages.create!(author: agent, body: "Obrigado, estamos olhando.")
     ticket.messages.create!(author: agent, body: "Parece ligado ao deploy de ontem.", internal: true)
   end
-  # Triage: the team sets the priority before the ticket moves on (urgent ones are
-  # escalated later, to show it in the history). Tickets still in triage keep none.
   if config.triage && target != config.initial_status
     ticket.update!(priority: sample[:priority] == "urgent" ? "high" : sample[:priority])
   end
-  # Walk the ticket through the work statuses up to its current one, like a real flow.
   path = config.statuses.take_while { |status| status != target }.drop(1) - config.final_statuses
   path << target unless target == ticket.status
   path.each do |status|
@@ -181,7 +172,6 @@ samples.each_with_index do |sample, i|
   end
   ticket.archive! if sample[:archived]
 
-  # Spread the history over time, in the order it happened.
   time = sample[:days].days.ago - (i * 37).minutes
   history = (ticket.events.to_a + ticket.messages.to_a).sort_by(&:created_at)
   history.each_with_index do |record, step|
