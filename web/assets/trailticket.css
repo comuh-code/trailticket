@@ -184,6 +184,8 @@ body.tt { margin: 0; }
 .tt-priority-normal { background: var(--tt-surface-2); color: var(--tt-text); border-color: var(--tt-line); }
 .tt-priority-low { background: transparent; border: 1.5px solid var(--tt-border); color: var(--tt-muted); }
 .tt-priority-none { background: transparent; border: 1.5px dashed var(--tt-border); color: var(--tt-text); }
+/* "No priority (suggested: High)" is long: let it wrap inside the card instead of overflowing. */
+.tt-priority-none { max-width: 100%; white-space: normal; text-align: left; }
 .tt-status { gap: 8px; background: transparent; padding-left: 0; font: 500 13px/20px var(--tt-font); }
 .tt-badge-internal { background: var(--tt-text); color: var(--tt-surface); letter-spacing: 0.04em; }
 .tt-badges { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -249,7 +251,7 @@ body.tt { margin: 0; }
 
 .tt-board {
   display: grid; grid-auto-flow: column; grid-auto-columns: minmax(232px, 1fr);
-  gap: 16px; overflow-x: auto; padding-bottom: 8px; align-items: start;
+  gap: 16px; overflow-x: auto; padding-bottom: 8px; align-items: stretch;
 }
 .tt-column {
   display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 160px;
@@ -309,9 +311,11 @@ body.tt { margin: 0; }
   display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; margin: 0 0 16px; padding: 16px;
   border-radius: var(--tt-radius-lg); background: var(--tt-surface); border: 1px solid var(--tt-line);
 }
-.tt-filters .tt-field:not(.tt-field-grow) { flex: 0 1 190px; }
+.tt-filters .tt-field:not(.tt-field-grow) { flex: 0 1 auto; max-width: 100%; }
+/* Selects as wide as their longest option, so none gets cut off. */
+.tt-filters .tt-field select { width: auto; min-width: 180px; max-width: 100%; }
 .tt-filter-actions { display: flex; gap: 8px; }
-.tt-filter-actions .tt-button:not(.tt-primary) { background: transparent; border-color: transparent; }
+.tt-filter-actions .tt-button { min-width: 96px; }
 .tt-list-meta {
   display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
   gap: 8px 16px; margin: 0 0 16px; padding: 0 4px;
@@ -331,6 +335,7 @@ body.tt { margin: 0; }
 .tt-table th:last-child, .tt-table td:last-child { padding-right: 24px; }
 .tt-table td a { font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }
 .tt-table time { white-space: nowrap; }
+.tt-table .tt-badges { flex-wrap: nowrap; white-space: nowrap; }
 .tt-empty-state {
   margin: 0; padding: 48px 24px; text-align: center; color: var(--tt-muted);
   border-radius: var(--tt-radius-lg); border: 1.5px dashed var(--tt-border);

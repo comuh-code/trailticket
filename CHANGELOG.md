@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.4] - 2026-11-18
+
+### Fixed
+- Board columns all have the same height (the closed column used to be taller than the others)
+- The "No priority (suggested: …)" badge wraps inside the card instead of overflowing it
+- Filter selects are as wide as their longest option, so "Anyone" and the others are not cut off
+- In the list, avatars and names stay on one line
+- The filters' "Clear" button looks like a button (bordered, same size as "Filter")
+
+### Changed
+- The list's "List" heading is only for screen readers, like the board's
+
 ## [0.6.3] - 2026-11-18
 
 ### Changed
