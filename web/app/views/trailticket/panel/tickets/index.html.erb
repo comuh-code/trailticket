@@ -19,6 +19,7 @@
     <span><%= tt('fields.priority') %></span>
     <select name="priority">
       <option value=""><%= tt('any_priority') %></option>
+      <option value="none" <%= 'selected' if @filters[:priority] == 'none' %>><%= tt('triage.no_priority') %></option>
       <% Trailticket::Ticket::PRIORITIES.each do |priority| %>
         <option value="<%= priority %>" <%= 'selected' if @filters[:priority] == priority %>><%= priority_label(priority) %></option>
       <% end %>
@@ -63,7 +64,7 @@
             <td class="tt-muted"><%= ticket.id %></td>
             <td><a href="<%= ticket_path(ticket) %>" data-tt-title><%= ticket.title %></a></td>
             <td><%= status_badge(ticket.status) %><% if ticket.archived? %> <span class="tt-badge" data-tt-archived><%= tt('archive.badge') %></span><% end %></td>
-            <td><%= priority_badge(ticket.priority) %></td>
+            <td><%= triage_badge(ticket) %></td>
             <td><%= author_label(ticket.author) %></td>
             <td><%= subject_label(ticket.subject) %></td>
             <td><%= time_label(ticket.created_at) %></td>

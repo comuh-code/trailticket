@@ -71,6 +71,7 @@ end
 | `statuses` | `open in_progress waiting closed` | Ordered statuses (and board columns) |
 | `initial_status` | first of `statuses` | Status of new tickets |
 | `final_statuses` | last of `statuses` | One or more "done" statuses: entering one fills `closed_at`/`closed_by` |
+| `triage` | `false` | Tickets start without priority (the user's pick is a suggestion) and must be prioritized before leaving `initial_status` |
 | `on_ticket_created`, `on_message_created`, `on_status_changed` | `nil` | Hooks, run after commit |
 | `sensitive_fields` | pass, secret, token, card, cvv, cvc, cpf, cnpj, ssn, iban, otp, pin | Extra names to mask, on top of `filter_parameters` |
 | `capture_field_values` | `true` | `false` keeps only *which* fields were filled |
@@ -250,6 +251,9 @@ Trailticket.configure do |c|
   # Final columns only show tickets closed in the last N days (nil: all).
   c.board_closed_days = 7
 
+  # Triage: new tickets wait in initial_status without a priority until the team sets one.
+  c.triage = true
+
   # Called on every status change, from the board, the ticket page, the API or your code.
   # actor is who made it (nil when unknown); (ticket, from, to) also works.
   c.on_status_changed = lambda do |ticket, from, to, actor|
@@ -271,6 +275,7 @@ end
 | `initial_status` | first of `statuses` | Where new tickets start |
 | `final_statuses` | last of `statuses` | "Done" statuses; only these can be archived |
 | `board_closed_days` | `7` | Final columns show tickets closed in the last N days; `nil` shows all |
+| `triage` | `false` | See *Triage* below |
 | `on_status_changed` | `nil` | `->(ticket, from, to, actor)`, after commit |
 | `context_partial` | `nil` | Partial rendered on the ticket page with `ticket` |
 
@@ -285,6 +290,21 @@ works under a CSP without `unsafe-inline`.
   final statuses keeps them). An invalid status returns 422 and
   nothing is saved. On the ticket page there are buttons for each status, so it also works
   without drag and drop (keyboard, touch screens).
+- **Triage** (`c.triage = true`): tickets open in `initial_status` (e.g. "em_analise")
+  **without a priority**; what the user picked when opening is kept as `suggested_priority` and
+  shown as "No priority (suggested: High)". Someone sets the priority (and assignee) on the
+  ticket page, and only then can it move to a non-final status — from the board, the buttons,
+  the JSON API or your code (it fails with a clear message otherwise). Going straight to a final
+  status, e.g. cancelled, is allowed. Work columns are ordered by priority, then oldest first.
+  ```ruby
+  c.statuses       = %w[em_analise a_fazer em_execucao aguardando resolvido cancelado]
+  c.initial_status = "em_analise"
+  c.final_statuses = %w[resolvido cancelado]
+  c.triage         = true
+  ```
+  Name your statuses in your locale: `pt-BR.trailticket.statuses.em_analise: "Em análise"`.
+- **Priority and assignee** can be set on the ticket page (assignees come from
+  `config.assignees`, or just yourself). Both go to the history.
 - **Keeping the board short**: final columns only show tickets closed in the last
   `board_closed_days` days, and tickets in a final status can be **archived** (button on the
   card and on the ticket page) to take them off the board and the default list. The list has an
@@ -332,7 +352,8 @@ bump its tag. To release:
    (annotated tag: `--follow-tags` does not push lightweight ones)
 3. In each app: update the tag, `bundle update trailticket`, then
    `bin/rails trailticket:install:migrations && bin/rails db:migrate` if there are new migrations
-   (0.3.0 adds `trailticket_events`, for the ticket history; 0.4.0 adds `archived_at`).
+   (0.3.0 adds `trailticket_events`, for the ticket history; 0.4.0 adds `archived_at`;
+   0.5.0 makes `priority` nullable and adds `suggested_priority`).
    **Don't skip `install:migrations`**: updating the gem does not copy its migrations, so the app
    does not even see them as pending — and the board, the list and ticket updates fail until
    they run. Commit the copied migrations with the tag bump.

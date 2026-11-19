@@ -22,7 +22,7 @@ module Trailticket
 
     def call
       ticket = Ticket.new(author: @author, title: @title, body: @body, subject: @subject)
-      ticket.priority = @priority if @priority.present?
+      assign_priority(ticket)
       ticket.context = build_context
       ticket.page_url = page_url_for(ticket.context)
 
@@ -63,6 +63,16 @@ module Trailticket
       end
 
       metadata
+    end
+
+    # With triage, what the user picked is only a suggestion (unknown values are
+    # dropped); the team sets the real priority.
+    def assign_priority(ticket)
+      if Trailticket.config.triage
+        ticket.suggested_priority = @priority.to_s.presence_in(Ticket::PRIORITIES)
+      elsif @priority.present?
+        ticket.priority = @priority
+      end
     end
 
     def attach_screenshot(ticket)

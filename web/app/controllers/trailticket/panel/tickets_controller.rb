@@ -3,7 +3,6 @@
 class Trailticket::Panel::TicketsController < Trailticket::Panel::ApplicationController
   BOARD_LIMIT = 50
   PER_PAGE = 25
-  ARCHIVE_FILTERS = %w[only all].freeze
 
   # tickets: cards shown; shown: tickets in the column (within the closed window);
   # total: every unarchived ticket with that status, for the "see all" link.
@@ -19,13 +18,9 @@ class Trailticket::Panel::TicketsController < Trailticket::Panel::ApplicationCon
 
   # GET /list?q=&status=&priority=&page=
   def index
-    @filters = filters
-    scope = filtered_scope
-    @total = scope.count
-    @pages = [(@total / PER_PAGE.to_f).ceil, 1].max
-    @page = params.fetch(:page, 1).to_i.clamp(1, @pages)
-    @tickets = base_scope.merge(scope).order(updated_at: :desc, id: :desc)
-                         .offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
+    filter = Trailticket::Panel::TicketFilter.new(params)
+    @filters = filter.to_h
+    paginate(filter.scope)
   end
 
   def show
@@ -63,6 +58,14 @@ class Trailticket::Panel::TicketsController < Trailticket::Panel::ApplicationCon
     @ticket = Trailticket::Ticket.find(params.fetch(:id))
   end
 
+  def paginate(scope)
+    @total = scope.count
+    @pages = [(@total / PER_PAGE.to_f).ceil, 1].max
+    @page = params.fetch(:page, 1).to_i.clamp(1, @pages)
+    @tickets = base_scope.merge(scope).order(updated_at: :desc, id: :desc)
+                         .offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
+  end
+
   def base_scope
     Trailticket::Ticket.includes(:author, :subject)
   end
@@ -74,43 +77,24 @@ class Trailticket::Panel::TicketsController < Trailticket::Panel::ApplicationCon
     visible = days ? scope.where(closed_at: days.days.ago..) : scope
     BoardColumn.new(
       status: status, window: days, shown: visible.count, total: scope.count,
-      tickets: base_scope.merge(visible).order(updated_at: :desc, id: :desc).limit(BOARD_LIMIT).to_a
+      tickets: board_order(base_scope.merge(visible), final).limit(BOARD_LIMIT).to_a
     )
   end
 
-  # Optional and forgiving: unknown values are ignored, not an error.
-  def filters
-    {
-      q: params.fetch(:q, '').to_s.strip.first(200),
-      status: params.fetch(:status, nil).presence_in(Trailticket.config.statuses),
-      priority: params.fetch(:priority, nil).presence_in(Trailticket::Ticket::PRIORITIES),
-      archived: params.fetch(:archived, nil).presence_in(ARCHIVE_FILTERS)
-    }
-  end
-
-  def filtered_scope
-    scope = archive_scope
-    if @filters[:q].present?
-      pattern = "%#{Trailticket::Ticket.sanitize_sql_like(@filters[:q])}%"
-      scope = scope.where(Trailticket::Ticket.arel_table[:title].matches(pattern, '\\'))
-    end
-    scope = scope.where(status: @filters[:status]) if @filters[:status]
-    scope = scope.where(priority: @filters[:priority]) if @filters[:priority]
-    scope
-  end
-
-  # Archived tickets are left out of the list unless asked for.
-  def archive_scope
-    case @filters[:archived]
-    when 'only' then Trailticket::Ticket.archived
-    when 'all' then Trailticket::Ticket.all
-    else Trailticket::Ticket.unarchived
-    end
+  # Work columns are a queue (most urgent, then oldest first); final columns show
+  # the most recently closed first.
+  def board_order(scope, final)
+    final ? scope.order(closed_at: :desc, id: :desc) : scope.by_priority.order(:created_at, :id)
   end
 
   # Own message for the common case, so it does not depend on the app having
   # Active Record translations for its locale.
   def status_error_message
+    if @ticket.errors.of_kind?(:priority, :required_for_triage)
+      initial = Trailticket::Ticket.initial_status
+      label = I18n.t("trailticket.statuses.#{initial}", default: initial.humanize)
+      return I18n.t('trailticket.web.triage.required', status: label)
+    end
     return @ticket.errors.full_messages.to_sentence unless @ticket.errors.include?(:status)
 
     I18n.t('trailticket.web.invalid_status', status: @ticket.status)

@@ -2,7 +2,7 @@
            data: { tt_card: true, id: ticket.id, status: ticket.status, url: ticket_status_path(ticket) } do %>
   <a class="tt-card-title" href="<%= ticket_path(ticket) %>" draggable="false"><%= ticket.title %></a>
   <div class="tt-card-meta">
-    <%= priority_badge(ticket.priority) %>
+    <%= triage_badge(ticket) %>
     <span class="tt-muted">#<%= ticket.id %> · <%= time_label(ticket.created_at) %></span>
   </div>
   <dl class="tt-card-people">

@@ -74,6 +74,18 @@ en:
         assignee_changed_html: "<strong>%{actor}</strong> changed the assignee from %{from} to %{to}"
         archived_html: "<strong>%{actor}</strong> archived the ticket"
         unarchived_html: "<strong>%{actor}</strong> unarchived the ticket"
+      details:
+        title: Triage
+        save: Save
+        nobody: Nobody
+        invalid_assignee: This person cannot be assigned.
+      triage:
+        no_priority: No priority
+        choose: Choose…
+        suggested: "Suggested by the user: %{priority}"
+        suggested_short: "%{text} (suggested: %{priority})"
+        hint: "Set the priority to move it out of %{status}."
+        required: "Set the priority before moving it out of %{status}."
       archive:
         button: Archive
         unarchive: Unarchive

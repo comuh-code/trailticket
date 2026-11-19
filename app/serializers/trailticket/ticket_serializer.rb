@@ -14,6 +14,7 @@ module Trailticket
         body: @ticket.body,
         status: @ticket.status,
         priority: @ticket.priority,
+        suggested_priority: @ticket.suggested_priority,
         page_url: @ticket.page_url,
         author: user(@ticket.author),
         assignee: user(@ticket.assignee),

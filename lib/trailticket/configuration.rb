@@ -55,6 +55,11 @@ module Trailticket
     # archived. Default: the last of `statuses`.
     attr_writer :final_statuses
 
+    # Triage: tickets start in initial_status without a priority (what the user
+    # picked is kept as suggested_priority) and cannot move on to a non-final
+    # status until someone sets one. Default: off (priority comes with the ticket).
+    attr_accessor :triage
+
     # Final columns of the board only show tickets closed in the last N days
     # (older ones stay in the list and search). nil shows them all.
     attr_accessor :board_closed_days
@@ -110,6 +115,7 @@ module Trailticket
       @subject_label = ->(record) { "#{record.class.name} ##{record.id}" }
       @context_partial = nil
       @board_closed_days = 7
+      @triage = false
 
       @sensitive_fields = %w[pass secret token card cvv cvc cpf cnpj ssn iban] + [/\Aotp\z/i, /\Apin\z/i]
       @capture_field_values = true

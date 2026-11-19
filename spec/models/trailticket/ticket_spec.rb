@@ -60,6 +60,54 @@ RSpec.describe Trailticket::Ticket do
     end
   end
 
+  describe 'triage' do
+    let(:agent) { create(:admin, :agent) }
+
+    before { allow(Trailticket.config).to receive(:triage).and_return(true) }
+
+    it 'opens tickets without a priority, keeping what the user picked as a suggestion' do
+      ticket = Trailticket.open_ticket(author: member, title: 'Bug', body: 'x', priority: 'high')
+
+      expect(ticket).to have_attributes(priority: nil, suggested_priority: 'high', status: 'open')
+      expect(ticket).to be_needs_triage
+    end
+
+    it 'drops an unknown suggestion instead of refusing the ticket' do
+      ticket = Trailticket.open_ticket(author: member, title: 'Bug', body: 'x', priority: 'asap')
+
+      expect(ticket).to be_persisted
+      expect(ticket.suggested_priority).to be_nil
+    end
+
+    it 'only leaves the initial status for a non-final one after it has a priority' do
+      ticket = create(:ticket, author: member)
+
+      expect(ticket.update(status: 'in_progress')).to be(false)
+      expect(ticket.errors.of_kind?(:priority, :required_for_triage)).to be(true)
+
+      ticket.reload.update!(priority: 'high')
+      ticket.update!(status: 'in_progress')
+      expect(ticket.reload.status).to eq('in_progress')
+    end
+
+    it 'lets an unprioritized ticket go straight to a final status' do
+      ticket = create(:ticket, author: member)
+
+      ticket.close!(by: agent)
+
+      expect(ticket.reload.status).to eq('closed')
+    end
+  end
+
+  describe 'without triage' do
+    it 'keeps normal as the default priority and the one the user picked' do
+      expect(create(:ticket, author: member).priority).to eq('normal')
+
+      ticket = Trailticket.open_ticket(author: member, title: 'Bug', body: 'x', priority: 'high')
+      expect(ticket).to have_attributes(priority: 'high', suggested_priority: nil)
+    end
+  end
+
   describe 'config validation' do
     it 'rejects unknown or conflicting initial/final statuses' do
       config = Trailticket::Configuration.new

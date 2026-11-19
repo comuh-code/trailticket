@@ -25,6 +25,7 @@ Trailticket.configure do |c|
   # c.initial_status    = "open"
   # c.final_statuses    = %w[closed]
   # c.board_closed_days = 7   # final columns show tickets closed in the last N days
+  # c.triage            = true # tickets wait in initial_status until someone sets a priority
 
   # Web interface (mount Trailticket::Web). Denies everyone until configured.
   # c.authorize     = ->(request) { request.env["warden"]&.user&.admin? }

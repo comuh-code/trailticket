@@ -81,7 +81,7 @@ samples = [
   {
     title: "Calendário mostra eventos no fuso errado",
     body: "Eventos às 19h aparecem às 22h.",
-    priority: "normal", status: "closed", days: 12, path: "/eventos?mes=11"
+    priority: "normal", status: "closed", days: 12, path: "/eventos?mes=11", cancelled: true
   },
   {
     title: "Busca não encontra nomes com acento",
@@ -124,6 +124,18 @@ samples = [
 # Changes below are recorded in each ticket's history as made by the agent.
 Trailticket::Current.actor = agent
 
+# Samples use generic stages; map them to whatever statuses are configured.
+config = Trailticket.config
+work = config.statuses - [config.initial_status] - config.final_statuses
+stage_status = lambda do |sample, i|
+  case sample[:status]
+  when "open" then config.triage && i.odd? ? work.first : config.initial_status
+  when "in_progress" then work[1] || work.first
+  when "waiting" then work.last
+  else sample[:cancelled] ? (config.final_statuses[1] || config.final_statuses.first) : config.final_statuses.first
+  end
+end
+
 samples.each_with_index do |sample, i|
   steps = sample[:trail] ? trail(base, *sample[:trail]) : []
   ticket = Trailticket.open_ticket(
@@ -145,18 +157,25 @@ samples.each_with_index do |sample, i|
   )
   raise "Seed failed: #{ticket.errors.full_messages.to_sentence}" unless ticket.persisted?
 
-  final = Trailticket::Ticket.final_status
+  target = stage_status.call(sample, i)
   if i.even?
     ticket.messages.create!(author: agent, body: "Obrigado, estamos olhando.")
     ticket.messages.create!(author: agent, body: "Parece ligado ao deploy de ontem.", internal: true)
   end
-  # Walk the ticket through the statuses before its current one, like a real flow.
-  path = Trailticket.config.statuses.take_while { |status| status != sample[:status] }.drop(1)
-  path << sample[:status] unless sample[:status] == ticket.status
-  path.each do |status|
-    ticket.update!(status: status, closed_by: (agent if status == final))
+  # Triage: the team sets the priority before the ticket moves on (urgent ones are
+  # escalated later, to show it in the history). Tickets still in triage keep none.
+  if config.triage && target != config.initial_status
+    ticket.update!(priority: sample[:priority] == "urgent" ? "high" : sample[:priority])
   end
-  ticket.update!(priority: sample[:priority]) if ticket.priority != sample[:priority]
+  # Walk the ticket through the work statuses up to its current one, like a real flow.
+  path = config.statuses.take_while { |status| status != target }.drop(1) - config.final_statuses
+  path << target unless target == ticket.status
+  path.each do |status|
+    ticket.update!(status: status, closed_by: (agent if config.final_statuses.include?(status)))
+  end
+  if ticket.priority && ticket.priority != sample[:priority]
+    ticket.update!(priority: sample[:priority])
+  end
   if i.odd?
     ticket.messages.create!(author: ticket.author, body: "Alguma novidade?")
   end

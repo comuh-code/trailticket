@@ -1,0 +1,10 @@
+# Names of the dummy app's own statuses (development only, see the initializer).
+pt-BR:
+  trailticket:
+    statuses:
+      em_analise: Em análise
+      a_fazer: A fazer
+      em_execucao: Em execução
+      aguardando: Aguardando
+      resolvido: Resolvido
+      cancelado: Cancelado

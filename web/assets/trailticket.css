@@ -90,6 +90,7 @@ body.tt {
 .tt-priority-low { background: var(--tt-low); color: var(--tt-low-text); }
 .tt-priority-high { background: var(--tt-high); color: var(--tt-high-text); }
 .tt-priority-urgent { background: var(--tt-urgent); color: var(--tt-urgent-text); }
+.tt-priority-none { background: transparent; color: var(--tt-muted); border: 1px dashed var(--tt-muted); }
 .tt-status { background: var(--tt-surface-2); color: var(--tt-text); }
 .tt-badges { display: flex; gap: 6px; flex-wrap: wrap; }
 
@@ -172,6 +173,13 @@ body.tt {
 
 /* Ticket */
 .tt-ticket-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+.tt-ticket-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.tt-details-form { display: flex; flex-direction: column; gap: 10px; }
+.tt-details-form .tt-button { align-self: flex-start; }
+.tt-triage-hint {
+  margin: 0; padding: 8px 10px; border-radius: 6px; font-size: 13px;
+  background: var(--tt-high); color: var(--tt-high-text);
+}
 .tt-ticket { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
 .tt-ticket-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .tt-panel {

@@ -207,6 +207,93 @@ RSpec.describe 'Trailticket web interface' do
     end
   end
 
+  describe 'triage' do
+    let(:ticket) do
+      Trailticket.open_ticket(author: member, title: 'Needs triage', body: 'x', priority: 'high')
+    end
+
+    def update_details(params)
+      patch "/chamados/tickets/#{ticket.id}/details", params: params, headers: auth(agent)
+    end
+
+    before { allow(Trailticket.config).to receive(:triage).and_return(true) }
+
+    it 'shows tickets without priority with the suggestion, after the prioritized ones' do
+      create(:ticket, title: 'Low one', priority: 'low', author: member)
+      create(:ticket, title: 'Urgent one', priority: 'urgent', author: member)
+      ticket
+
+      get '/chamados', headers: auth(agent)
+
+      titles = column('open').css('.tt-card-title').map(&:text)
+      expect(titles).to eq(['Urgent one', 'Low one', 'Needs triage'])
+      expect(column('open').at_css('[data-tt-needs-priority]').text)
+        .to eq('No priority (suggested: High)')
+    end
+
+    it 'refuses to move it out of the initial status until prioritized' do
+      patch_status(ticket, 'in_progress')
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(json['error']).to eq('Set the priority before moving it out of Open.')
+      expect(ticket.reload.status).to eq('open')
+
+      update_details(priority: 'urgent', assignee: "Admin:#{agent.id}")
+      expect(response).to redirect_to("/chamados/tickets/#{ticket.id}")
+
+      patch_status(ticket, 'in_progress')
+      expect(response).to have_http_status(:ok)
+      expect(ticket.reload).to have_attributes(priority: 'urgent', assignee: agent,
+                                               status: 'in_progress')
+    end
+
+    it 'records the triage in the history' do
+      update_details(priority: 'high', assignee: "Admin:#{agent.id}")
+
+      get "/chamados/tickets/#{ticket.id}", headers: auth(agent)
+      texts = page.css('[data-tt-history] .tt-timeline-text').map { |e| e.text.squish }
+      expect(texts).to include('Sergio changed the priority from No priority to High',
+                               'Sergio changed the assignee from — to Sergio')
+    end
+
+    it 'shows the triage hint and suggestion on the ticket page' do
+      get "/chamados/tickets/#{ticket.id}", headers: auth(agent)
+
+      expect(page.at_css('[data-tt-triage-hint]').text.squish)
+        .to eq('Set the priority to move it out of Open. Suggested by the user: High')
+      expect(page.at_css('[data-tt-details] select[name="priority"] option').text).to eq('Choose…')
+    end
+
+    it 'never clears the priority and rejects assignees that are not options' do
+      ticket.update!(priority: 'low')
+
+      update_details(priority: '')
+      expect(ticket.reload.priority).to eq('low')
+
+      update_details(assignee: "Admin:#{member.id}")
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(page.at_css('[data-tt-error]').text).to eq('This person cannot be assigned.')
+      expect(ticket.reload.assignee).to be_nil
+    end
+
+    it 'filters tickets without priority in the list' do
+      create(:ticket, title: 'Prioritized', priority: 'normal', author: member)
+      ticket
+
+      get '/chamados/list', params: { priority: 'none' }, headers: auth(agent)
+
+      expect(page.css('[data-tt-row] [data-tt-title]').map(&:text)).to eq(['Needs triage'])
+    end
+
+    it 'applies the same rule to the JSON API' do
+      patch "/trailticket/tickets/#{ticket.id}", as: :json, headers: auth(agent),
+                                                 params: { ticket: { status: 'in_progress' } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(json.dig('errors', 'priority')).to be_present
+    end
+  end
+
   describe 'several final statuses' do
     let(:ticket) { create(:ticket, author: member) }
 

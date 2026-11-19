@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.5.0] - 2026-11-20
+
+### Added
+- Triage (`config.triage`, off by default): tickets start in `initial_status` without a
+  priority, the priority the user picked is kept as `suggested_priority`, and a ticket can only
+  move from the initial status to a non-final one after it has a priority (board, buttons, JSON
+  API and Ruby). Going straight to a final status is allowed
+- Priority and assignee can be set on the ticket page (recorded in the history)
+- Board work columns ordered by priority (most urgent first, no priority last), then oldest
+  first; final columns by most recently closed
+- "No priority" filter in the list; `suggested_priority` in the JSON API
+
+### Changed
+- `priority` may be `nil` (only with triage on); without triage new tickets still default to
+  `normal`
+
+### Upgrading
+- New migration: `bin/rails trailticket:install:migrations && bin/rails db:migrate`
+
 ## [0.4.0] - 2026-11-19
 
 ### Added

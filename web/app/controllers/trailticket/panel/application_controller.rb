@@ -14,7 +14,18 @@ class Trailticket::Panel::ApplicationController < ActionController::Base
     render_error :not_found, 'not_found'
   end
 
+  helper_method :assignee_options, :assignee_key
+
   private
+
+  # Who can be assigned: config.assignees, or just whoever is acting.
+  def assignee_options
+    @assignee_options ||= Trailticket.config.assignees&.call&.to_a || [current_actor].compact
+  end
+
+  def assignee_key(record)
+    "#{record.class.name}:#{record.id}" if record
+  end
 
   def current_actor
     Trailticket.config.current_actor&.call(request)

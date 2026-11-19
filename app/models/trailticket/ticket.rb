@@ -21,13 +21,22 @@ module Trailticket
     attribute :context, :json, default: -> { {} }
 
     attribute :status, :string, default: -> { Trailticket.config.initial_status }
-    enum :priority, PRIORITIES.index_with(&:itself), prefix: true, default: "normal", validate: true
+    enum :priority, PRIORITIES.index_with(&:itself),
+         prefix: true, validate: { allow_nil: true },
+         default: -> { Trailticket.config.triage ? nil : "normal" }
 
     validates :title, presence: true, length: { maximum: 200 }
     validates :body, presence: true
     validates :status, inclusion: { in: ->(_ticket) { Trailticket.config.statuses } }
+    validates :suggested_priority, inclusion: { in: PRIORITIES }, allow_nil: true
+    validate :prioritized_before_leaving_triage
 
     scope :active, -> { where.not(status: final_statuses) }
+    # Most urgent first, tickets without a priority (in triage) last.
+    scope :by_priority, lambda {
+      ranks = PRIORITIES.reverse.each_with_index.map { |name, rank| "WHEN '#{name}' THEN #{rank}" }
+      order(Arel.sql("CASE #{table_name}.priority #{ranks.join(' ')} ELSE #{PRIORITIES.size} END"))
+    }
 
     before_save :sync_closed_at
     before_save :remember_actor, if: :will_save_change_to_status?
@@ -66,6 +75,11 @@ module Trailticket
       method_defined?(:screenshot)
     end
 
+    # In triage: waiting for someone to set the priority.
+    def needs_triage?
+      Trailticket.config.triage && priority.nil?
+    end
+
     def screenshot?
       self.class.screenshots? && screenshot.attached?
     end
@@ -89,6 +103,16 @@ module Trailticket
         self.closed_at = nil
         self.closed_by = nil
       end
+    end
+
+    # With triage on, a ticket leaves the initial status for a non-final one only
+    # after it has a priority. Going straight to a final status (e.g. cancelled) is fine.
+    def prioritized_before_leaving_triage
+      return unless Trailticket.config.triage && priority.nil? && will_save_change_to_status?
+      return unless status_in_database == self.class.initial_status && !final_status?
+
+      errors.add(:priority, :required_for_triage,
+                 message: "must be set before leaving #{self.class.initial_status}")
     end
 
     def remember_actor

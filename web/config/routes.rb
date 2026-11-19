@@ -5,6 +5,7 @@ Trailticket::Web.routes.draw do
   get 'list', to: 'tickets#index', as: :list
   get 'tickets/:id', to: 'tickets#show', as: :ticket
   patch 'tickets/:id/status', to: 'tickets#status', as: :ticket_status
+  patch 'tickets/:id/details', to: 'details#update', as: :ticket_details
   post 'tickets/:ticket_id/messages', to: 'messages#create', as: :ticket_messages
   post 'tickets/:id/archive', to: 'archives#create', as: :ticket_archive
   delete 'tickets/:id/archive', to: 'archives#destroy'

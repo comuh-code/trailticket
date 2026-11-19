@@ -3,7 +3,7 @@
 
 <header class="tt-ticket-head">
   <h1 class="tt-title"><span class="tt-muted">#<%= @ticket.id %></span> <%= @ticket.title %></h1>
-  <div class="tt-badges"><%= status_badge(@ticket.status) %> <%= priority_badge(@ticket.priority) %></div>
+  <div class="tt-badges"><%= status_badge(@ticket.status) %> <%= triage_badge(@ticket) %></div>
 </header>
 
 <% if @error %>
@@ -120,7 +120,10 @@
     </section>
   </div>
 
-  <aside class="tt-panel tt-ticket-side">
+  <aside class="tt-ticket-side">
+    <%= render 'trailticket/panel/tickets/details_form', ticket: @ticket %>
+
+    <div class="tt-panel">
     <h2><%= tt('ticket.details') %></h2>
     <dl class="tt-details">
       <dt><%= tt('fields.page_url') %></dt><dd class="tt-break" data-tt-page-url><%= safe_link(@ticket.page_url) %></dd>
@@ -134,5 +137,6 @@
         <dt><%= tt('fields.closed_by') %></dt><dd data-tt-closed-by><%= author_label(@ticket.closed_by) %></dd>
       <% end %>
     </dl>
+    </div>
   </aside>
 </div>

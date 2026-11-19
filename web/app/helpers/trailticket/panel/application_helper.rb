@@ -16,6 +16,8 @@ module Trailticket::Panel::ApplicationHelper
   end
 
   def priority_label(priority)
+    return tt('triage.no_priority') if priority.blank?
+
     t("trailticket.priorities.#{priority}", default: priority.to_s.humanize)
   end
 
@@ -33,7 +35,19 @@ module Trailticket::Panel::ApplicationHelper
   end
 
   def priority_badge(priority)
-    content_tag(:span, priority_label(priority), class: "tt-badge tt-priority-#{priority}")
+    content_tag(:span, priority_label(priority),
+                class: "tt-badge tt-priority-#{priority.presence || 'none'}")
+  end
+
+  # "No priority (suggested: High)" while in triage.
+  def triage_badge(ticket)
+    return priority_badge(ticket.priority) unless ticket.priority.nil?
+
+    text = priority_label(nil)
+    if (suggested = ticket.suggested_priority)
+      text = tt('triage.suggested_short', text: text, priority: priority_label(suggested))
+    end
+    content_tag(:span, text, class: 'tt-badge tt-priority-none', data: { tt_needs_priority: true })
   end
 
   def time_label(time)

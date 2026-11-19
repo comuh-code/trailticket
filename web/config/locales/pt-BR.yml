@@ -74,6 +74,18 @@ pt-BR:
         assignee_changed_html: "<strong>%{actor}</strong> mudou o responsável de %{from} para %{to}"
         archived_html: "<strong>%{actor}</strong> arquivou o chamado"
         unarchived_html: "<strong>%{actor}</strong> desarquivou o chamado"
+      details:
+        title: Triagem
+        save: Salvar
+        nobody: Ninguém
+        invalid_assignee: Essa pessoa não pode ser responsável.
+      triage:
+        no_priority: Sem prioridade
+        choose: Escolha…
+        suggested: "Sugerida pelo usuário: %{priority}"
+        suggested_short: "%{text} (sugerida: %{priority})"
+        hint: "Defina a prioridade para tirar de %{status}."
+        required: "Defina a prioridade antes de tirar de %{status}."
       archive:
         button: Arquivar
         unarchive: Desarquivar
