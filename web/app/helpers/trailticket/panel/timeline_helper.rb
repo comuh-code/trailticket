@@ -12,6 +12,11 @@ module Trailticket::Panel::TimelineHelper
     entries.sort_by.with_index { |entry, index| [entry.at || Time.current, index] }
   end
 
+  # The last assignee change: who set (or changed) the current assignee, and when.
+  def last_assignment(events)
+    events.reverse_each.find { |event| event.action == 'assignee_changed' }
+  end
+
   # One sentence per event. The *_html translations escape every interpolated value.
   def event_sentence(event)
     actor = event.actor ? author_label(event.actor) : tt('timeline.someone')

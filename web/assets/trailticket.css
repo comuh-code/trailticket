@@ -359,6 +359,7 @@ body.tt { margin: 0; }
 .tt-details { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px 16px; margin: 0; font-size: 14px; }
 .tt-details dt { color: var(--tt-muted); font-weight: 500; }
 .tt-details dd { margin: 0; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.tt-assigned-by { display: block; margin-top: 2px; font: 400 12px/16px var(--tt-font); color: var(--tt-muted); }
 .tt-screenshot { max-width: 100%; height: auto; border-radius: var(--tt-radius); border: 1px solid var(--tt-line); }
 
 /* Navigation trail: a vertical timeline. */

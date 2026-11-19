@@ -30,6 +30,10 @@ pt-BR:
       search_placeholder: Buscar pelo título
       any_status: Qualquer status
       any_priority: Qualquer prioridade
+      any_assignee: Qualquer responsável
+      my_tickets: Meus chamados
+      no_assignee: Sem responsável
+      assigned_by: "definido por %{actor}"
       filter: Filtrar
       clear: Limpar
       no_results: Nenhum chamado com esses filtros.

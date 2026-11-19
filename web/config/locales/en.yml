@@ -30,6 +30,10 @@ en:
       search_placeholder: Search by title
       any_status: Any status
       any_priority: Any priority
+      any_assignee: Anyone
+      my_tickets: Assigned to me
+      no_assignee: Unassigned
+      assigned_by: "set by %{actor}"
       filter: Filter
       clear: Clear
       no_results: No tickets match these filters.

@@ -119,7 +119,13 @@
         %dt= tt('fields.subject')
         %dd= subject_label(@ticket.subject)
         %dt= tt('fields.assignee')
-        %dd= author_label(@ticket.assignee)
+        %dd{data: { tt_assignee: true }}
+          = author_label(@ticket.assignee)
+          - if @ticket.assignee && (assignment = last_assignment(@events))
+            %span.tt-assigned-by{data: { tt_assigned_by: true }}
+              = tt('assigned_by', actor: assignment.actor ? author_label(assignment.actor) : tt('timeline.someone'))
+              ·
+              = time_label(assignment.created_at)
         %dt= tt('fields.created_at')
         %dd= time_label(@ticket.created_at)
         %dt= tt('fields.updated_at')

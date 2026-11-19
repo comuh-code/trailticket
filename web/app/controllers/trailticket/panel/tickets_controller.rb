@@ -18,7 +18,8 @@ class Trailticket::Panel::TicketsController < Trailticket::Panel::ApplicationCon
 
   # GET /list?q=&status=&priority=&page=
   def index
-    filter = Trailticket::Panel::TicketFilter.new(params)
+    keys = assignee_options.map { |person| assignee_key(person) }
+    filter = Trailticket::Panel::TicketFilter.new(params, actor: current_actor, assignee_keys: keys)
     @filters = filter.to_h
     paginate(filter.scope)
   end
@@ -67,7 +68,7 @@ class Trailticket::Panel::TicketsController < Trailticket::Panel::ApplicationCon
   end
 
   def base_scope
-    Trailticket::Ticket.includes(:author, :subject)
+    Trailticket::Ticket.includes(:author, :subject, :assignee)
   end
 
   def board_column(status)

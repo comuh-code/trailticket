@@ -19,6 +19,16 @@
       - Trailticket::Ticket::PRIORITIES.each do |priority|
         %option{value: priority, selected: @filters[:priority] == priority}= priority_label(priority)
   %label.tt-field
+    %span= tt('fields.assignee')
+    %select{name: 'assignee'}
+      %option{value: ''}= tt('any_assignee')
+      - if current_actor
+        %option{value: 'me', selected: @filters[:assignee] == 'me'}= tt('my_tickets')
+      %option{value: 'none', selected: @filters[:assignee] == 'none'}= tt('no_assignee')
+      - assignee_options.each do |person|
+        - key = assignee_key(person)
+        %option{value: key, selected: @filters[:assignee] == key}= author_label(person)
+  %label.tt-field
     %span= tt('archive.filter')
     %select{name: 'archived'}
       %option{value: ''}= tt('archive.not_archived')
@@ -38,7 +48,7 @@
     %table.tt-table
       %thead
         %tr
-          - %w[id title status priority author subject created_at updated_at].each do |field|
+          - %w[id title status priority assignee author subject created_at updated_at].each do |field|
             %th{scope: 'col'}= tt("fields.#{field}")
       %tbody
         - @tickets.each do |ticket|
@@ -51,6 +61,12 @@
               - if ticket.archived?
                 %span.tt-badge{data: { tt_archived: true }}= tt('archive.badge')
             %td= triage_badge(ticket)
+            %td
+              - if ticket.assignee
+                - assignee = author_label(ticket.assignee)
+                %span.tt-badges{data: { tt_assignee: true }}= safe_join([avatar(assignee), assignee])
+              - else
+                %span.tt-muted= tt('details.nobody')
             %td
               - author = author_label(ticket.author)
               %span.tt-badges= safe_join([avatar(author), author])

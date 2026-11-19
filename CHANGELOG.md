@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0] - 2026-11-20
+
+### Added
+- Assignee column in the ticket list
+- Assignee filter in the list: anyone, assigned to me, unassigned or a specific person
+- The ticket page shows who set the current assignee and when ("set by Sergio · …")
+
 ## [0.5.3] - 2026-11-20
 
 ### Changed

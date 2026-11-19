@@ -304,7 +304,9 @@ works under a CSP without `unsafe-inline`.
   ```
   Name your statuses in your locale: `pt-BR.trailticket.statuses.em_analise: "Em análise"`.
 - **Priority and assignee** can be set on the ticket page (assignees come from
-  `config.assignees`, or just yourself). Both go to the history.
+  `config.assignees`, or just yourself). Both go to the history, and the ticket page shows who
+  set the current assignee. The list has an assignee column and filter (anyone, assigned to me,
+  unassigned or a person).
 - **Keeping the board short**: final columns only show tickets closed in the last
   `board_closed_days` days, and tickets in a final status can be **archived** (button on the
   card and on the ticket page) to take them off the board and the default list. The list has an

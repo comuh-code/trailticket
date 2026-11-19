@@ -318,6 +318,58 @@ RSpec.describe 'Trailticket web interface' do
     end
   end
 
+  describe 'assignees' do
+    let(:paula) { create(:admin, :agent, name: 'Paula') }
+    let!(:mine) { create(:ticket, title: 'Mine', author: member) }
+    let!(:paulas) { create(:ticket, title: 'Paulas', author: member) }
+    let!(:nobodys) { create(:ticket, title: 'Nobodys', author: member) }
+
+    before do
+      Trailticket.with_actor(paula) { mine.update!(assignee: agent) }
+      paulas.update!(assignee: paula) # no known actor
+    end
+
+    def list_titles(params)
+      get '/chamados/list', params: params, headers: auth(agent)
+      page.css('[data-tt-row] [data-tt-title]').map(&:text)
+    end
+
+    it 'shows the assignee in the list' do
+      get '/chamados/list', headers: auth(agent)
+
+      rows = page.css('[data-tt-row]').to_h do |row|
+        cell = row.css('td')[4]
+        badge = cell.at_css('[data-tt-assignee]')
+        name = badge ? badge.children.last.text : cell.text.squish
+        [row.at_css('[data-tt-title]').text, name]
+      end
+      expect(rows).to include('Mine' => 'Sergio', 'Paulas' => 'Paula', 'Nobodys' => 'Nobody')
+    end
+
+    it 'filters by a person, by me and by unassigned' do
+      expect(list_titles(assignee: "Admin:#{paula.id}")).to eq(['Paulas'])
+      expect(list_titles(assignee: 'me')).to eq(['Mine'])
+      expect(list_titles(assignee: 'none')).to eq(['Nobodys'])
+      expect(page.at_css('select[name="assignee"] option[selected]')['value']).to eq('none')
+    end
+
+    it 'ignores people who are not assignee options' do
+      expect(list_titles(assignee: "Admin:#{member.id}").size).to eq(3)
+    end
+
+    it 'shows who set the assignee on the ticket page' do
+      get "/chamados/tickets/#{mine.id}", headers: auth(agent)
+      expect(page.at_css('[data-tt-assigned-by]').text.squish).to start_with('set by Paula ·')
+
+      get "/chamados/tickets/#{paulas.id}", headers: auth(agent)
+      expect(page.at_css('[data-tt-assigned-by]').text.squish).to start_with('set by Someone ·')
+
+      get "/chamados/tickets/#{nobodys.id}", headers: auth(agent)
+      expect(page.at_css('[data-tt-assigned-by]')).to be_nil
+      expect(page.at_css('[data-tt-assignee]').text.squish).to eq('—')
+    end
+  end
+
   describe 'GET /chamados/list' do
     before do
       create(:ticket, title: 'Checkout fails', priority: 'high')
