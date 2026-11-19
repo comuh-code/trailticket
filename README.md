@@ -214,7 +214,7 @@ Trailticket::ContextSanitizer.clean_url("https://app.test/r?token=abc")
 ## Web interface
 
 A ready-made interface for whoever handles tickets: a **kanban** (drag cards between status
-columns), a **list** with search, filters and pagination, and a **ticket page** with the
+columns, filter by text, priority and assignee), a **list** with search, filters and pagination, and a **ticket page** with the
 description, origin URL, navigation trail, the rest of the captured context and the ticket's
 **history**, where the team can also **reply** or add **internal notes**.
 

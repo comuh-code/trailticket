@@ -1,5 +1,6 @@
 - content_for :title, tt('board')
 %h1.tt-sr-only= tt('board')
+= render 'trailticket/panel/tickets/filters', url: root_path, board: true
 .tt-board{data: { tt_board: true, error: tt('move_failed') }}
   - @columns.each do |column|
     - status = column.status
@@ -16,5 +17,5 @@
         = render partial: 'trailticket/panel/tickets/card', collection: column.tickets, as: :ticket
       = tag.p tt('empty_column'), class: 'tt-empty', data: { tt_empty: true }, hidden: column.tickets.any?
       - if column.total > column.tickets.size
-        = link_to tt('see_all', count: column.total), list_path(status: status),
+        = link_to tt('see_all', count: column.total), list_path(@filters.compact_blank.merge(status: status)),
                   class: 'tt-more', data: { tt_more: true }

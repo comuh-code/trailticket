@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.1] - 2026-11-20
+
+### Added
+- The board has the list's filters: search, priority and assignee (anyone, assigned to me,
+  unassigned or a person). Counters follow the filters, the "see all" link keeps them, and they
+  live in the URL (e.g. `/admin/tickets?assignee=me`). Status and archived stay list-only: each
+  column is a status and the board never shows archived tickets
+
 ## [0.6.0] - 2026-11-20
 
 ### Added

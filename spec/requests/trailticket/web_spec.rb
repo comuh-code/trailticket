@@ -122,6 +122,52 @@ RSpec.describe 'Trailticket web interface' do
     end
   end
 
+  describe 'board filters' do
+    before do
+      create(:ticket, title: 'Checkout fails', priority: 'high', author: member, assignee: agent)
+      create(:ticket, title: 'Checkout slow', priority: 'low', author: member)
+      create(:ticket, title: 'Login broken', priority: 'high', author: member)
+        .update!(status: 'waiting')
+    end
+
+    def board_titles(params = {})
+      get '/chamados', params: params, headers: auth(agent)
+      page.css('[data-tt-card] .tt-card-title').map(&:text)
+    end
+
+    it 'offers search, priority and assignee, but not status or archived' do
+      get '/chamados', headers: auth(agent)
+
+      form = page.at_css('[data-tt-filters]')
+      expect(form['action']).to eq('/chamados/')
+      expect(form.css('[name]').pluck('name')).to contain_exactly('q', 'priority', 'assignee')
+    end
+
+    it 'filters every column and their counters' do
+      expect(board_titles(q: 'checkout')).to contain_exactly('Checkout fails', 'Checkout slow')
+      expect(column('open').at_css('[data-tt-count]').text).to eq('2')
+      expect(column('waiting').at_css('[data-tt-count]').text).to eq('0')
+
+      expect(board_titles(priority: 'high')).to contain_exactly('Checkout fails', 'Login broken')
+      expect(board_titles(assignee: 'me')).to eq(['Checkout fails'])
+      expect(board_titles(assignee: 'none', q: 'checkout')).to eq(['Checkout slow'])
+    end
+
+    it 'ignores status and archived on the board' do
+      expect(board_titles(status: 'waiting', archived: 'only').size).to eq(3)
+    end
+
+    it 'keeps the filters in the link to the list' do
+      allow(Trailticket.config).to receive(:board_closed_days).and_return(nil)
+      stub_const('Trailticket::Panel::Board::LIMIT', 1)
+
+      board_titles(q: 'checkout')
+
+      expect(column('open').at_css('[data-tt-more]')['href'])
+        .to eq('/chamados/list?q=checkout&status=open')
+    end
+  end
+
   describe 'board window and archiving' do
     let(:recent) { create(:ticket, title: 'Closed today', author: member) }
     let(:old) { create(:ticket, title: 'Closed long ago', author: member) }

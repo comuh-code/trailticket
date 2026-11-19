@@ -1,25 +1,21 @@
 # frozen_string_literal: true
 
 class Trailticket::Panel::TicketsController < Trailticket::Panel::ApplicationController
-  BOARD_LIMIT = 50
   PER_PAGE = 25
-
-  # tickets: cards shown; shown: tickets in the column (within the closed window);
-  # total: every unarchived ticket with that status, for the "see all" link.
-  BoardColumn = Struct.new(:status, :tickets, :shown, :total, :window, keyword_init: true)
 
   before_action :set_ticket, only: %i[show status screenshot]
 
-  # GET /  — one column per status. Archived tickets never show; final columns
-  # only show tickets closed in the last config.board_closed_days days.
+  # GET /?q=&priority=&assignee=  — one column per status, with the list's filters
+  # except status (each column is one) and archived (the board never shows them).
   def board
-    @columns = Trailticket.config.statuses.map { |status| board_column(status) }
+    filter = ticket_filter(params.except(:status, :archived))
+    @filters = filter.to_h
+    @columns = Trailticket::Panel::Board.new(filter.scope).columns
   end
 
-  # GET /list?q=&status=&priority=&page=
+  # GET /list?q=&status=&priority=&assignee=&archived=&page=
   def index
-    keys = assignee_options.map { |person| assignee_key(person) }
-    filter = Trailticket::Panel::TicketFilter.new(params, actor: current_actor, assignee_keys: keys)
+    filter = ticket_filter(params)
     @filters = filter.to_h
     paginate(filter.scope)
   end
@@ -67,29 +63,15 @@ class Trailticket::Panel::TicketsController < Trailticket::Panel::ApplicationCon
                          .offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
   end
 
+  def ticket_filter(source)
+    keys = assignee_options.map { |person| assignee_key(person) }
+    Trailticket::Panel::TicketFilter.new(source, actor: current_actor, assignee_keys: keys)
+  end
+
   def base_scope
     Trailticket::Ticket.includes(:author, :subject, :assignee)
   end
 
-  def board_column(status)
-    scope = Trailticket::Ticket.unarchived.where(status: status)
-    final = Trailticket::Ticket.final_statuses.include?(status)
-    days = Trailticket.config.board_closed_days if final
-    visible = days ? scope.where(closed_at: days.days.ago..) : scope
-    BoardColumn.new(
-      status: status, window: days, shown: visible.count, total: scope.count,
-      tickets: board_order(base_scope.merge(visible), final).limit(BOARD_LIMIT).to_a
-    )
-  end
-
-  # Work columns are a queue (most urgent, then oldest first); final columns show
-  # the most recently closed first.
-  def board_order(scope, final)
-    final ? scope.order(closed_at: :desc, id: :desc) : scope.by_priority.order(:created_at, :id)
-  end
-
-  # Own message for the common case, so it does not depend on the app having
-  # Active Record translations for its locale.
   def status_error_message
     if @ticket.errors.of_kind?(:priority, :required_for_triage)
       initial = Trailticket::Ticket.initial_status

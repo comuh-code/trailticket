@@ -1,0 +1,42 @@
+-# Filters of the list and the board. On the board (board: true) status and
+-# archived are left out: each column is a status and archived tickets never show.
+- board = local_assigns.fetch(:board, false)
+= form_with url: url, method: :get, class: 'tt-filters', role: 'search',
+            skip_enforcing_utf8: true, data: { tt_filters: true } do
+  %label.tt-field.tt-field-grow
+    %span= tt('search')
+    %input{type: 'search', name: 'q', value: @filters[:q], placeholder: tt('search_placeholder')}
+  - unless board
+    %label.tt-field
+      %span= tt('fields.status')
+      %select{name: 'status'}
+        %option{value: ''}= tt('any_status')
+        - Trailticket.config.statuses.each do |status|
+          %option{value: status, selected: @filters[:status] == status}= status_label(status)
+  %label.tt-field
+    %span= tt('fields.priority')
+    %select{name: 'priority'}
+      %option{value: ''}= tt('any_priority')
+      %option{value: 'none', selected: @filters[:priority] == 'none'}= tt('triage.no_priority')
+      - Trailticket::Ticket::PRIORITIES.each do |priority|
+        %option{value: priority, selected: @filters[:priority] == priority}= priority_label(priority)
+  %label.tt-field
+    %span= tt('fields.assignee')
+    %select{name: 'assignee'}
+      %option{value: ''}= tt('any_assignee')
+      - if current_actor
+        %option{value: 'me', selected: @filters[:assignee] == 'me'}= tt('my_tickets')
+      %option{value: 'none', selected: @filters[:assignee] == 'none'}= tt('no_assignee')
+      - assignee_options.each do |person|
+        - key = assignee_key(person)
+        %option{value: key, selected: @filters[:assignee] == key}= author_label(person)
+  - unless board
+    %label.tt-field
+      %span= tt('archive.filter')
+      %select{name: 'archived'}
+        %option{value: ''}= tt('archive.not_archived')
+        %option{value: 'only', selected: @filters[:archived] == 'only'}= tt('archive.only')
+        %option{value: 'all', selected: @filters[:archived] == 'all'}= tt('archive.all')
+  .tt-filter-actions
+    %button.tt-button.tt-primary{type: 'submit'}= tt('filter')
+    = link_to tt('clear'), url, class: 'tt-button'
