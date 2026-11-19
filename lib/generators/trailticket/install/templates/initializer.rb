@@ -37,6 +37,7 @@ Trailticket.configure do |c|
   # c.context_partial = "admin/tickets/context"
   # c.web_theme = "auto"                         # "auto", "light" or "dark"
   # c.web_stylesheet = "/trailticket-theme.css"  # overrides --tt-* tokens
+  # c.web_design_system = true                   # /design-system page, for developing the look
 
   # Hooks, run after commit.
   # c.on_ticket_created  = ->(ticket) { }

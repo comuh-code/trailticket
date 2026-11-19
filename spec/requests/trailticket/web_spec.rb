@@ -862,6 +862,23 @@ RSpec.describe 'Trailticket web interface' do
       expect(page.at_css('body')['data-tt-theme']).to eq('auto')
     end
 
+    it 'hides the design system page and its link unless enabled' do
+      allow(Trailticket.config).to receive(:web_design_system).and_return(false)
+
+      get '/chamados', headers: auth(agent)
+      expect(page.at_css('.tt-footer a')).to be_nil
+      expect(page.at_css('.tt-footer').text.squish).to eq("trailticket #{Trailticket::VERSION}")
+
+      get '/chamados/design-system', headers: auth(agent)
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it 'links the design system page in the footer when enabled' do
+      get '/chamados', headers: auth(agent)
+
+      expect(page.at_css('.tt-footer a')['href']).to eq('/chamados/design-system')
+    end
+
     it 'shows the design system page with both themes' do
       create(:ticket, author: member)
 

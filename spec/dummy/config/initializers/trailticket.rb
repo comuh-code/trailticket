@@ -21,6 +21,8 @@ Trailticket.configure do |c|
   c.current_actor = dummy_admin
   c.author_label = ->(admin) { admin.name }
   c.subject_label = ->(record) { record.try(:name) || "#{record.class.name} ##{record.id}" }
+  c.web_design_system = true
+
   c.on_status_changed = lambda do |ticket, from, to, actor|
     Rails.logger.info("[trailticket] ##{ticket.id} #{from} -> #{to} by #{actor&.name || '?'}")
   end

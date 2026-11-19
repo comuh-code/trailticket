@@ -93,6 +93,10 @@ class Trailticket::Configuration
   # --tt-* tokens (accent color, font...). String or ->(request) { String }. Optional.
   attr_accessor :web_stylesheet
 
+  # Design system page (/design-system) and its link in the footer: a reference for
+  # whoever develops the panel's look, not for the people handling tickets. Default: off.
+  attr_accessor :web_design_system
+
   # --- Context capture -----------------------------------------------------
 
   # Extra field/param names to mask, on top of Rails' filter_parameters.
@@ -174,6 +178,7 @@ class Trailticket::Configuration
     @subject_label = ->(record) { "#{record.class.name} ##{record.id}" }
     @web_theme = 'auto'
     @web_stylesheet = nil
+    @web_design_system = false
   end
 
   def capture_defaults

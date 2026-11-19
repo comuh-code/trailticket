@@ -23,5 +23,7 @@
     %main.tt-main
       = yield
     %footer.tt-footer
-      = link_to tt('design.title'), design_system_path
-      · trailticket #{Trailticket::VERSION}
+      - if Trailticket.config.web_design_system
+        = link_to tt('design.title'), design_system_path
+        ·
+      trailticket #{Trailticket::VERSION}

@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Trailticket::Panel::DesignSystemController < Trailticket::Panel::ApplicationController
+  before_action { raise ActiveRecord::RecordNotFound unless Trailticket.config.web_design_system }
+
   COLOR_TOKENS = [
     %w[--tt-bg #f6f7f9 #0f1115 bg],
     %w[--tt-surface #ffffff #171a20 surface],

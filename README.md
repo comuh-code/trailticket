@@ -376,7 +376,9 @@ end
 Priorities and statuses never rely on color alone: badges carry an icon and a word, and status
 dots follow the status role (initial outlined, work filled, done green). The full reference, with
 every component in both themes, is the **Design system** page of the panel itself
-(`/design-system` under the mount path, linked in the footer).
+(`/design-system` under the mount path). It is meant for whoever develops the panel's look, so
+it is off by default: turn it on with `c.web_design_system = true` and it gets a link in the
+footer (the dummy app in `spec/dummy` has it on).
 
 ### Seeing it locally
 

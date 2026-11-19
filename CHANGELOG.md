@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.5] - 2026-11-18
+
+### Changed
+- The design system page and its footer link are off by default: they are a reference for
+  developing the panel, not for the people handling tickets. Turn them on with
+  `config.web_design_system = true`
+
 ## [0.6.4] - 2026-11-18
 
 ### Fixed
