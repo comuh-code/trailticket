@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 Trailticket::Engine.routes.draw do
   defaults format: :json do
-    get "me", to: "me#show"
+    get 'me', to: 'me#show'
 
     resources :tickets, only: %i[index show create update] do
       member do

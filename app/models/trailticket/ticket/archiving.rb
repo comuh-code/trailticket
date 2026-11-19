@@ -1,45 +1,43 @@
-module Trailticket
-  class Ticket
-    # Takes done tickets off the board and the default list. Only tickets in a
-    # final status can be archived; reopening one brings it back.
-    module Archiving
-      extend ActiveSupport::Concern
+# frozen_string_literal: true
 
-      included do
-        scope :archived, -> { where.not(archived_at: nil) }
-        scope :unarchived, -> { where(archived_at: nil) }
+# Takes done tickets off the board and the default list. Only tickets in a
+# final status can be archived; reopening one brings it back.
+module Trailticket::Ticket::Archiving
+  extend ActiveSupport::Concern
 
-        before_validation :unarchive_when_reopened
-        validate :archived_only_when_final
-      end
+  included do
+    scope :archived, -> { where.not(archived_at: nil) }
+    scope :unarchived, -> { where(archived_at: nil) }
 
-      def archived?
-        archived_at.present?
-      end
+    before_validation :unarchive_when_reopened
+    validate :archived_only_when_final
+  end
 
-      def archivable?
-        final_status? && !archived?
-      end
+  def archived?
+    archived_at.present?
+  end
 
-      def archive!
-        update!(archived_at: Time.current)
-      end
+  def archivable?
+    final_status? && !archived?
+  end
 
-      def unarchive!
-        update!(archived_at: nil)
-      end
+  def archive!
+    update!(archived_at: Time.current)
+  end
 
-      private
+  def unarchive!
+    update!(archived_at: nil)
+  end
 
-      def unarchive_when_reopened
-        self.archived_at = nil if will_save_change_to_status? && !final_status?
-      end
+  private
 
-      def archived_only_when_final
-        return unless archived? && !final_status?
+  def unarchive_when_reopened
+    self.archived_at = nil if will_save_change_to_status? && !final_status?
+  end
 
-        errors.add(:archived_at, "can only be set when the ticket is in a final status")
-      end
-    end
+  def archived_only_when_final
+    return unless archived? && !final_status?
+
+    errors.add(:archived_at, 'can only be set when the ticket is in a final status')
   end
 end

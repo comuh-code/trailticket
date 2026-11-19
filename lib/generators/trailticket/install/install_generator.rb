@@ -1,38 +1,36 @@
-require "rails/generators"
+# frozen_string_literal: true
 
-module Trailticket
-  module Generators
-    # bin/rails g trailticket:install [--path=/trailticket]
-    class InstallGenerator < Rails::Generators::Base
-      source_root File.expand_path("templates", __dir__)
+require 'rails/generators'
 
-      class_option :path, type: :string, default: "/trailticket", desc: "Where to mount the engine"
+# bin/rails g trailticket:install [--path=/trailticket]
+class Trailticket::Generators::InstallGenerator < Rails::Generators::Base
+  source_root File.expand_path('templates', __dir__)
 
-      def create_initializer
-        template "initializer.rb", "config/initializers/trailticket.rb"
-      end
+  class_option :path, type: :string, default: '/trailticket', desc: 'Where to mount the engine'
 
-      def mount_engine
-        route %(mount Trailticket::Engine, at: "#{options[:path]}")
-      end
+  def create_initializer
+    template 'initializer.rb', 'config/initializers/trailticket.rb'
+  end
 
-      def copy_migrations
-        rails_command "trailticket:install:migrations"
-      end
+  def mount_engine
+    route %(mount Trailticket::Engine, at: "#{options[:path]}")
+  end
 
-      def next_steps
-        say <<~MSG, :green
+  def copy_migrations
+    rails_command 'trailticket:install:migrations'
+  end
 
-          Trailticket installed. Next:
-            1. bin/rails db:migrate
-            2. Edit config/initializers/trailticket.rb (who opens, who manages)
-            3. Screenshots need Active Storage (bin/rails active_storage:install)
-            4. Load the collector, e.g. with importmap:
-                 pin "trailticket", to: "trailticket.js"
-               and start it with endpoint: "#{options[:path]}"
-            5. Optional web interface: mount Trailticket::Web and set c.authorize (see README)
-        MSG
-      end
-    end
+  def next_steps
+    say <<~MSG, :green
+
+      Trailticket installed. Next:
+        1. bin/rails db:migrate
+        2. Edit config/initializers/trailticket.rb (who opens, who manages)
+        3. Screenshots need Active Storage (bin/rails active_storage:install)
+        4. Load the collector, e.g. with importmap:
+             pin "trailticket", to: "trailticket.js"
+           and start it with endpoint: "#{options[:path]}"
+        5. Optional web interface: mount Trailticket::Web and set c.authorize (see README)
+    MSG
   end
 end

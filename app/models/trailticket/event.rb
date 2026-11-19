@@ -1,19 +1,19 @@
-module Trailticket
-  # One entry in a ticket's history: a status, priority or assignee change, or
-  # the ticket being archived/unarchived.
-  # Replies are Trailticket::Message; the ticket page merges both in one timeline.
-  class Event < ApplicationRecord
-    ACTIONS = %w[status_changed priority_changed assignee_changed archived unarchived].freeze
+# frozen_string_literal: true
 
-    belongs_to :ticket, inverse_of: :events
-    # Who did it: Trailticket::Current.actor at the time, nil when unknown.
-    belongs_to :actor, polymorphic: true, optional: true
+# One entry in a ticket's history: a status, priority or assignee change, or
+# the ticket being archived/unarchived.
+# Replies are Trailticket::Message; the ticket page merges both in one timeline.
+class Trailticket::Event < Trailticket::ApplicationRecord
+  ACTIONS = %w[status_changed priority_changed assignee_changed archived unarchived].freeze
 
-    attribute :data, :json, default: -> { {} }
+  belongs_to :ticket, inverse_of: :events
+  # Who did it: Trailticket::Current.actor at the time, nil when unknown.
+  belongs_to :actor, polymorphic: true, optional: true
 
-    validates :action, inclusion: { in: ACTIONS }
+  attribute :data, :json, default: -> { {} }
 
-    def from = data["from"]
-    def to = data["to"]
-  end
+  validates :action, inclusion: { in: ACTIONS }
+
+  def from = data['from']
+  def to = data['to']
 end

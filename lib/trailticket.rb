@@ -1,16 +1,15 @@
-require "trailticket/version"
+# frozen_string_literal: true
+
+require 'trailticket/version'
+
+# Support tickets that carry the user's context. See README.md.
 module Trailticket
   class Error < StandardError; end
   class InvalidScreenshot < Error; end
-end
 
-require "trailticket/configuration"
-require "trailticket/context_sanitizer"
-require "trailticket/screenshot_decoder"
-require "trailticket/engine"
-require "trailticket/web"
+  # Namespace of the Rails generators (bin/rails g trailticket:install).
+  module Generators; end
 
-module Trailticket
   class << self
     def config
       @config ||= Configuration.new
@@ -41,8 +40,14 @@ module Trailticket
     # The web interface and the API already do this for each request.
     #
     #   Trailticket.with_actor(current_user) { ticket.update!(priority: "high") }
-    def with_actor(actor, &block)
-      Current.set(actor: actor, &block)
+    def with_actor(actor, &)
+      Current.set(actor: actor, &)
     end
   end
 end
+
+require 'trailticket/configuration'
+require 'trailticket/context_sanitizer'
+require 'trailticket/screenshot_decoder'
+require 'trailticket/engine'
+require 'trailticket/web'

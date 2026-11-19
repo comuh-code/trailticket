@@ -1,11 +1,13 @@
+# frozen_string_literal: true
+
 class CreateTrailticketMessages < ActiveRecord::Migration[7.1]
   def change
     create_table :trailticket_messages, id: primary_key_type do |t|
       t.references :ticket, null: false, type: foreign_key_type,
                             foreign_key: { to_table: :trailticket_tickets },
-                            index: { name: "idx_trailticket_messages_on_ticket" }
+                            index: { name: 'idx_trailticket_messages_on_ticket' }
       t.references :author, polymorphic: true, null: false, type: foreign_key_type,
-                            index: { name: "idx_trailticket_messages_on_author" }
+                            index: { name: 'idx_trailticket_messages_on_author' }
       t.text :body, null: false
       t.boolean :internal, null: false, default: false
       t.timestamps

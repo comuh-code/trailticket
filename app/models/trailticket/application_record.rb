@@ -1,5 +1,5 @@
-module Trailticket
-  class ApplicationRecord < ActiveRecord::Base
-    self.abstract_class = true
-  end
+# frozen_string_literal: true
+
+class Trailticket::ApplicationRecord < ActiveRecord::Base
+  self.abstract_class = true
 end

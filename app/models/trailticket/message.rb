@@ -1,19 +1,19 @@
-module Trailticket
-  class Message < ApplicationRecord
-    belongs_to :ticket, touch: true, inverse_of: :messages
-    belongs_to :author, polymorphic: true
+# frozen_string_literal: true
 
-    validates :body, presence: true
+class Trailticket::Message < Trailticket::ApplicationRecord
+  belongs_to :ticket, touch: true, inverse_of: :messages
+  belongs_to :author, polymorphic: true
 
-    # Internal notes are only visible to whoever handles tickets.
-    scope :public_only, -> { where(internal: false) }
+  validates :body, presence: true
 
-    after_create_commit :notify_created
+  # Internal notes are only visible to whoever handles tickets.
+  scope :public_only, -> { where(internal: false) }
 
-    private
+  after_create_commit :notify_created
 
-    def notify_created
-      Trailticket.config.on_message_created&.call(self)
-    end
+  private
+
+  def notify_created
+    Trailticket.config.on_message_created&.call(self)
   end
 end

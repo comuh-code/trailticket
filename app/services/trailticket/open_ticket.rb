@@ -1,87 +1,85 @@
-module Trailticket
-  class OpenTicket
-    RESERVED_CONTEXT_KEYS = %w[page trail fields errors].freeze
+# frozen_string_literal: true
 
-    def self.call(**attributes)
-      new(**attributes).call
+class Trailticket::OpenTicket
+  RESERVED_CONTEXT_KEYS = %w[page trail fields errors].freeze
+  OPTIONS = %i[priority context screenshot subject user_agent page_url metadata].freeze
+
+  def self.call(**attributes)
+    new(**attributes).call
+  end
+
+  # author:, title: and body: are required; the rest are OPTIONS (unknown keys raise).
+  def initialize(author:, title:, body:, **options)
+    options.assert_valid_keys(*OPTIONS)
+    OPTIONS.each { |name| instance_variable_set(:"@#{name}", options[name]) }
+    @attributes = { author: author, title: title, body: body, subject: @subject }
+    @metadata = normalize_metadata(@metadata)
+  end
+
+  def call
+    ticket = Trailticket::Ticket.new(@attributes)
+    assign_priority(ticket)
+    ticket.context = build_context
+    ticket.page_url = page_url_for(ticket.context)
+
+    error = attach_screenshot(ticket)
+    return screenshot_rejected(ticket, error) if error
+
+    ticket.save
+    ticket
+  end
+
+  private
+
+  def build_context
+    context = Trailticket::ContextSanitizer.call(@context)
+    if @user_agent.present?
+      context['page'] ||= {}
+      context['page']['user_agent'] ||= @user_agent.to_s[0, 500]
+    end
+    # metadata is trusted server data: merged after sanitization, never through it.
+    context.merge(@metadata)
+  end
+
+  def page_url_for(context)
+    return Trailticket::ContextSanitizer.clean_url(@page_url) if @page_url.present?
+
+    context.dig('page', 'url')
+  end
+
+  def normalize_metadata(metadata)
+    metadata = (metadata || {}).to_h.deep_stringify_keys
+    reserved = metadata.keys & RESERVED_CONTEXT_KEYS
+    if reserved.any?
+      raise ArgumentError, "metadata cannot use reserved context keys: #{reserved.join(', ')}"
     end
 
-    def initialize(author:, title:, body:, priority: nil, context: nil, screenshot: nil,
-                   subject: nil, user_agent: nil, page_url: nil, metadata: {})
-      @author = author
-      @title = title
-      @body = body
-      @priority = priority
-      @context = context
-      @screenshot = screenshot
-      @subject = subject
-      @user_agent = user_agent
-      @page_url = page_url
-      @metadata = normalize_metadata(metadata)
+    metadata
+  end
+
+  # With triage, what the user picked is only a suggestion (unknown values are
+  # dropped); the team sets the real priority.
+  def assign_priority(ticket)
+    if Trailticket.config.triage
+      ticket.suggested_priority = @priority.to_s.presence_in(Trailticket::Ticket::PRIORITIES)
+    elsif @priority.present?
+      ticket.priority = @priority
     end
+  end
 
-    def call
-      ticket = Ticket.new(author: @author, title: @title, body: @body, subject: @subject)
-      assign_priority(ticket)
-      ticket.context = build_context
-      ticket.page_url = page_url_for(ticket.context)
+  # Not saved: the ticket comes back with every validation error plus the screenshot's.
+  def screenshot_rejected(ticket, error)
+    ticket.validate
+    ticket.errors.add(:screenshot, error)
+    ticket
+  end
 
-      screenshot_error = attach_screenshot(ticket)
-      if screenshot_error
-        ticket.validate
-        ticket.errors.add(:screenshot, screenshot_error)
-        return ticket
-      end
+  def attach_screenshot(ticket)
+    return if @screenshot.blank? || !Trailticket::Ticket.screenshots?
 
-      ticket.save
-      ticket
-    end
-
-    private
-
-    def build_context
-      context = ContextSanitizer.call(@context)
-      if @user_agent.present?
-        context["page"] ||= {}
-        context["page"]["user_agent"] ||= @user_agent.to_s[0, 500]
-      end
-      # metadata is trusted server data: merged after sanitization, never through it.
-      context.merge(@metadata)
-    end
-
-    def page_url_for(context)
-      return ContextSanitizer.clean_url(@page_url) if @page_url.present?
-
-      context.dig("page", "url")
-    end
-
-    def normalize_metadata(metadata)
-      metadata = (metadata || {}).to_h.deep_stringify_keys
-      reserved = metadata.keys & RESERVED_CONTEXT_KEYS
-      if reserved.any?
-        raise ArgumentError, "metadata cannot use reserved context keys: #{reserved.join(', ')}"
-      end
-
-      metadata
-    end
-
-    # With triage, what the user picked is only a suggestion (unknown values are
-    # dropped); the team sets the real priority.
-    def assign_priority(ticket)
-      if Trailticket.config.triage
-        ticket.suggested_priority = @priority.to_s.presence_in(Ticket::PRIORITIES)
-      elsif @priority.present?
-        ticket.priority = @priority
-      end
-    end
-
-    def attach_screenshot(ticket)
-      return if @screenshot.blank? || !Ticket.screenshots?
-
-      ticket.screenshot.attach(**ScreenshotDecoder.call(@screenshot))
-      nil
-    rescue InvalidScreenshot => e
-      e.message
-    end
+    ticket.screenshot.attach(**Trailticket::ScreenshotDecoder.call(@screenshot))
+    nil
+  rescue Trailticket::InvalidScreenshot => e
+    e.message
   end
 end

@@ -1,121 +1,126 @@
-module Trailticket
-  class TicketsController < ApplicationController
-    MAX_PER_PAGE = 100
+# frozen_string_literal: true
 
-    before_action :set_ticket, only: %i[show update close reopen screenshot]
-    before_action :require_show!, only: %i[show screenshot]
-    before_action :require_manage!, only: %i[update close reopen]
+class Trailticket::TicketsController < Trailticket::ApplicationController
+  MAX_PER_PAGE = 100
 
-    # GET /tickets?status=active|all|open|...&page=1&per=25
-    def index
-      filter = status_filter
-      page = [params[:page].to_i, 1].max
-      per = (params[:per].presence || 25).to_i.clamp(1, MAX_PER_PAGE)
+  before_action :set_ticket, only: %i[show update close reopen screenshot]
+  before_action :require_show!, only: %i[show screenshot]
+  before_action :require_manage!, only: %i[update close reopen]
 
-      scope = TicketPolicy::Scope.new(ticket_user).resolve
-      scope = case filter
-              when "active" then scope.active
-              when "all" then scope
-              else scope.where(status: filter)
-              end
+  # GET /tickets?status=active|all|open|...&page=1&per=25
+  def index
+    filter = status_filter
+    page, per = pagination
+    scope = visible_tickets(filter)
+    tickets = scope.includes(:author, :assignee, :closed_by)
+                   .order(updated_at: :desc)
+                   .offset((page - 1) * per).limit(per)
 
-      tickets = scope.includes(:author, :assignee, :closed_by)
-                     .order(updated_at: :desc)
-                     .offset((page - 1) * per).limit(per)
+    render json: {
+      tickets: tickets.map { |ticket| serialize(ticket) },
+      meta: { page: page, per: per, total: scope.count, status: filter }
+    }
+  end
 
-      render json: {
-        tickets: tickets.map { |ticket| serialize(ticket) },
-        meta: { page: page, per: per, total: scope.count, status: filter }
-      }
+  def show
+    render json: serialize(@ticket, details: true)
+  end
+
+  # POST /tickets  { ticket: { title, body, priority, context, screenshot } }
+  # screenshot: data URL string or multipart file. context: object or JSON string.
+  def create
+    return trailticket_deny! unless ticket_policy.create?
+
+    ticket = Trailticket.open_ticket(**new_ticket_attributes)
+    respond_with_ticket(ticket.persisted?, ticket, status: :created)
+  end
+
+  # PATCH /tickets/:id  { ticket: { status, priority, assignee_id } }
+  def update
+    attrs = params.require(:ticket).permit(:status, :priority, :assignee_id)
+    @ticket.assign_attributes(attrs.slice(:status, :priority))
+    if attrs.key?(:assignee_id)
+      @ticket.assignee = find_assignee(attrs[:assignee_id])
+      return render_errors(assignee_id: ['is not allowed']) if @invalid_assignee
     end
+    @ticket.closed_by = ticket_user if @ticket.closing?
 
-    def show
-      render json: serialize(@ticket, details: true)
+    respond_with_ticket(@ticket.save, @ticket)
+  end
+
+  def close
+    @ticket.close!(by: ticket_user)
+    render json: serialize(@ticket, details: true)
+  end
+
+  def reopen
+    @ticket.reopen!
+    render json: serialize(@ticket, details: true)
+  end
+
+  # Served through the engine so the same permissions apply to the image.
+  def screenshot
+    return head(:not_found) unless @ticket.screenshot?
+
+    blob = @ticket.screenshot.blob
+    response.headers['Cache-Control'] = 'private, max-age=300'
+    send_data blob.download, type: blob.content_type, disposition: 'inline',
+                             filename: blob.filename.to_s
+  end
+
+  private
+
+  def pagination
+    [[params[:page].to_i, 1].max, (params[:per].presence || 25).to_i.clamp(1, MAX_PER_PAGE)]
+  end
+
+  def visible_tickets(filter)
+    scope = Trailticket::TicketPolicy::Scope.new(ticket_user).resolve
+    case filter
+    when 'active' then scope.active
+    when 'all' then scope
+    else scope.where(status: filter)
     end
+  end
 
-    # POST /tickets  { ticket: { title, body, priority, context, screenshot } }
-    # screenshot: data URL string or multipart file. context: object or JSON string.
-    def create
-      return trailticket_deny! unless ticket_policy.create?
+  # POST /tickets  { ticket: { title, body, priority, context, screenshot } }
+  def new_ticket_attributes
+    attrs = params.require(:ticket)
+    fields = %i[title body priority context screenshot].index_with { |key| attrs[key] }
+    fields.merge(author: ticket_user, user_agent: request.user_agent)
+  end
 
-      attrs = params.require(:ticket)
-      ticket = Trailticket.open_ticket(
-        author: ticket_user,
-        title: attrs[:title],
-        body: attrs[:body],
-        priority: attrs[:priority],
-        context: attrs[:context],
-        screenshot: attrs[:screenshot],
-        user_agent: request.user_agent
-      )
+  def respond_with_ticket(saved, ticket, status: :ok)
+    return render(json: serialize(ticket, details: true), status: status) if saved
 
-      if ticket.persisted?
-        render json: serialize(ticket, details: true), status: :created
-      else
-        render json: { errors: ticket.errors.to_hash }, status: 422
-      end
-    end
+    render_errors(ticket.errors.to_hash)
+  end
 
-    # PATCH /tickets/:id  { ticket: { status, priority, assignee_id } }
-    def update
-      attrs = params.require(:ticket).permit(:status, :priority, :assignee_id)
-      @ticket.assign_attributes(attrs.slice(:status, :priority))
-      if attrs.key?(:assignee_id)
-        @ticket.assignee = find_assignee(attrs[:assignee_id])
-        return render(json: { errors: { assignee_id: ["is not allowed"] } }, status: 422) if @invalid_assignee
-      end
-      @ticket.closed_by = ticket_user if @ticket.closing?
+  def render_errors(errors)
+    render json: { errors: errors }, status: :unprocessable_content
+  end
 
-      if @ticket.save
-        render json: serialize(@ticket, details: true)
-      else
-        render json: { errors: @ticket.errors.to_hash }, status: 422
-      end
-    end
+  def set_ticket
+    @ticket = Trailticket::Ticket.find(params[:id])
+  end
 
-    def close
-      @ticket.close!(by: ticket_user)
-      render json: serialize(@ticket, details: true)
-    end
+  def status_filter
+    params[:status].presence_in(Trailticket.config.statuses + %w[active all]) || 'active'
+  end
 
-    def reopen
-      @ticket.reopen!
-      render json: serialize(@ticket, details: true)
-    end
+  def require_show!
+    trailticket_deny! unless ticket_policy(@ticket).show?
+  end
 
-    # Served through the engine so the same permissions apply to the image.
-    def screenshot
-      return head(:not_found) unless @ticket.screenshot?
+  def require_manage!
+    trailticket_deny! unless ticket_policy(@ticket).manage?
+  end
 
-      blob = @ticket.screenshot.blob
-      response.headers["Cache-Control"] = "private, max-age=300"
-      send_data blob.download, type: blob.content_type, disposition: "inline", filename: blob.filename.to_s
-    end
+  def find_assignee(id)
+    return nil if id.blank?
 
-    private
-
-    def set_ticket
-      @ticket = Ticket.find(params[:id])
-    end
-
-    def status_filter
-      params[:status].presence_in(Trailticket.config.statuses + %w[active all]) || "active"
-    end
-
-    def require_show!
-      trailticket_deny! unless ticket_policy(@ticket).show?
-    end
-
-    def require_manage!
-      trailticket_deny! unless ticket_policy(@ticket).manage?
-    end
-
-    def find_assignee(id)
-      return nil if id.blank?
-
-      assignee_options.find { |user| user.id.to_s == id.to_s }.tap do |user|
-        @invalid_assignee = user.nil?
-      end
+    assignee_options.find { |user| user.id.to_s == id.to_s }.tap do |user|
+      @invalid_assignee = user.nil?
     end
   end
 end

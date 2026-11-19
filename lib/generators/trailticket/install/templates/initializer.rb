@@ -1,14 +1,16 @@
+# frozen_string_literal: true
+
 Trailticket.configure do |c|
   # Who the user is and how to get the signed-in one.
-  c.user_class = "User"
+  c.user_class = 'User'
   c.current_user_method = :current_user
   # c.authenticate = -> { authenticate_user! }
 
   # Who may open tickets (and see their own).
-  c.can_open = ->(user) { true }
+  c.can_open = ->(_user) { true }
 
   # Who handles tickets: sees all, replies, internal notes, status, assignee, close/reopen.
-  c.can_manage = ->(user) { false }
+  c.can_manage = ->(_user) { false }
 
   # Who can be assigned. Without it, managers can only assign themselves.
   # c.assignees = -> { User.where(role: %w[support]) }
@@ -17,7 +19,7 @@ Trailticket.configure do |c|
   # c.user_json = ->(user) { { id: user.id, name: user.name } }
 
   # Controller the engine inherits from ("ActionController::API" for API-only apps).
-  c.parent_controller = "ApplicationController"
+  c.parent_controller = 'ApplicationController'
 
   # Statuses, in order (also the web interface columns), where tickets start and
   # which ones mean "done" (closed_at/closed_by, can be archived).

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Trailticket
   # Controllers, helpers and views of the web interface (web/app/*/trailticket/panel).
   module Panel
@@ -16,7 +18,7 @@ module Trailticket
   # used as its own namespace does not get its route helpers isolated.
   class Web < ::Rails::Engine
     isolate_namespace Trailticket::Panel
-    engine_name "trailticket_web"
-    config.root = File.expand_path("../../web", __dir__)
+    engine_name 'trailticket_web'
+    config.root = File.expand_path('../../web', __dir__)
   end
 end

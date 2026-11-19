@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.5.1] - 2026-11-20
+
+### Changed
+- Code follows the project's RuboCop config (compact `class Trailticket::X` style, single
+  quotes, `frozen_string_literal`); CI lint passes. No behavior change
+- `.rubocop.yml` targets Rails 7.1, the oldest supported version
+
+### Fixed
+- Engine classes inherit explicitly from `Trailticket::ApplicationRecord` and
+  `Trailticket::ApplicationController`
+
 ## [0.5.0] - 2026-11-20
 
 ### Added
