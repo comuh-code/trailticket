@@ -1,19 +1,24 @@
 <% content_for :title, tt('board') %>
 <h1 class="tt-sr-only"><%= tt('board') %></h1>
 <div class="tt-board" data-tt-board data-error="<%= tt('move_failed') %>">
-  <% @columns.each do |status, tickets| %>
-    <% count = @counts.fetch(status, 0) %>
-    <section class="tt-column" data-tt-column data-status="<%= status %>" aria-labelledby="tt-col-<%= status.parameterize %>">
+  <% @columns.each do |column| %>
+    <% status = column.status %>
+    <section class="tt-column" data-tt-column data-status="<%= status %>"
+             data-final="<%= Trailticket::Ticket.final_statuses.include?(status) %>"
+             aria-labelledby="tt-col-<%= status.parameterize %>">
       <header class="tt-column-head">
         <h2 id="tt-col-<%= status.parameterize %>"><%= status_label(status) %></h2>
-        <span class="tt-count" data-tt-count aria-label="<%= tt('total', count: count) %>"><%= count %></span>
+        <span class="tt-count" data-tt-count aria-label="<%= tt('total', count: column.shown) %>"><%= column.shown %></span>
       </header>
+      <% if column.window %>
+        <p class="tt-column-hint" data-tt-window><%= tt('board_window', count: column.window) %></p>
+      <% end %>
       <ol class="tt-cards" data-tt-cards>
-        <%= render partial: 'trailticket/panel/tickets/card', collection: tickets, as: :ticket %>
+        <%= render partial: 'trailticket/panel/tickets/card', collection: column.tickets, as: :ticket %>
       </ol>
-      <%= tag.p tt('empty_column'), class: 'tt-empty', data: { tt_empty: true }, hidden: tickets.any? %>
-      <% if count > tickets.size %>
-        <%= link_to tt('see_all', count: count), list_path(status: status), class: 'tt-more' %>
+      <%= tag.p tt('empty_column'), class: 'tt-empty', data: { tt_empty: true }, hidden: column.tickets.any? %>
+      <% if column.total > column.tickets.size %>
+        <%= link_to tt('see_all', count: column.total), list_path(status: status), class: 'tt-more', data: { tt_more: true } %>
       <% end %>
     </section>
   <% end %>

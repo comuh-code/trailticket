@@ -16,6 +16,9 @@ en:
       list: List
       back: Back to board
       empty_column: No tickets
+      board_window:
+        one: Closed in the last day
+        other: Closed in the last %{count} days
       see_all:
         one: See the ticket in the list
         other: See all %{count} in the list
@@ -69,6 +72,18 @@ en:
         reopened_html: "<strong>%{actor}</strong> reopened the ticket (%{from} → %{to})"
         priority_changed_html: "<strong>%{actor}</strong> changed the priority from %{from} to %{to}"
         assignee_changed_html: "<strong>%{actor}</strong> changed the assignee from %{from} to %{to}"
+        archived_html: "<strong>%{actor}</strong> archived the ticket"
+        unarchived_html: "<strong>%{actor}</strong> unarchived the ticket"
+      archive:
+        button: Archive
+        unarchive: Unarchive
+        banner: "Archived on %{date}. It is hidden from the board and the default list."
+        badge: Archived
+        filter: Archived
+        not_archived: Not archived
+        only: Only archived
+        all: All
+        not_final: Only tickets in a final status can be archived.
       reply:
         title: Reply
         body: Message

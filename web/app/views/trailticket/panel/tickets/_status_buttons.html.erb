@@ -8,4 +8,8 @@
                     params: { status: status }, class: 'tt-button', form_class: 'tt-inline-form' %>
     <% end %>
   <% end %>
+  <% if ticket.archivable? %>
+    <%= button_to tt('archive.button'), ticket_archive_path(ticket), class: 'tt-button tt-archive-button',
+                  form_class: 'tt-inline-form', data: { tt_archive_button: true } %>
+  <% end %>
 </div>

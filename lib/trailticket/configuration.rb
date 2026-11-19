@@ -38,13 +38,26 @@ module Trailticket
     # --- Hooks (run after commit) -------------------------------------------
     attr_accessor :on_ticket_created   # ->(ticket) {}
     attr_accessor :on_message_created  # ->(message) {}
-    attr_accessor :on_status_changed   # ->(ticket, from, to) {}
+    # ->(ticket, from, to, actor) {}; actor is who made the change (may be nil).
+    # Lambdas with only (ticket, from, to) keep working.
+    attr_accessor :on_status_changed
 
     # --- Tickets ---------------------------------------------------------------
 
-    # Ordered statuses, also the board columns. The first is the initial one and
-    # the last is final: moving there fills closed_at/closed_by, leaving it clears them.
+    # Ordered statuses, also the board columns.
     attr_reader :statuses
+
+    # Status of new tickets. Default: the first of `statuses`.
+    attr_writer :initial_status
+
+    # Statuses where a ticket is done (e.g. resolved and cancelled). Entering one
+    # fills closed_at/closed_by, leaving them clears both. Only these tickets can be
+    # archived. Default: the last of `statuses`.
+    attr_writer :final_statuses
+
+    # Final columns of the board only show tickets closed in the last N days
+    # (older ones stay in the list and search). nil shows them all.
+    attr_accessor :board_closed_days
 
     # --- Web interface (Trailticket::Web) --------------------------------------
     # Independent from can_open/can_manage, which only apply to the JSON API.
@@ -96,6 +109,7 @@ module Trailticket
       @author_label = ->(record) { "#{record.class.name} ##{record.id}" }
       @subject_label = ->(record) { "#{record.class.name} ##{record.id}" }
       @context_partial = nil
+      @board_closed_days = 7
 
       @sensitive_fields = %w[pass secret token card cvv cvc cpf cnpj ssn iban] + [/\Aotp\z/i, /\Apin\z/i]
       @capture_field_values = true
@@ -113,6 +127,29 @@ module Trailticket
       raise ArgumentError, "statuses needs at least two entries (initial and final)" unless list[1]
 
       @statuses = list.freeze
+    end
+
+    def initial_status
+      (@initial_status || statuses.first).to_s
+    end
+
+    def final_statuses
+      Array(@final_statuses || statuses.last).map(&:to_s)
+    end
+
+    # Run after the app boots, so a typo fails early instead of on the first ticket.
+    def validate!
+      unknown = ([initial_status] + final_statuses) - statuses
+      if unknown.any?
+        raise ArgumentError,
+              "Trailticket: unknown status #{unknown.join(', ')} (statuses: #{statuses.join(', ')})"
+      end
+      if final_statuses.include?(initial_status)
+        raise ArgumentError, "Trailticket: initial_status cannot be final"
+      end
+      raise ArgumentError, "Trailticket: final_statuses cannot be empty" if final_statuses.empty?
+
+      self
     end
 
     def user_klass

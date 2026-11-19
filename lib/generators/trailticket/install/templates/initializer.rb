@@ -19,8 +19,12 @@ Trailticket.configure do |c|
   # Controller the engine inherits from ("ActionController::API" for API-only apps).
   c.parent_controller = "ApplicationController"
 
-  # Statuses, in order (also the web interface columns). The last one is final.
-  # c.statuses = %w[open in_progress waiting closed]
+  # Statuses, in order (also the web interface columns), where tickets start and
+  # which ones mean "done" (closed_at/closed_by, can be archived).
+  # c.statuses          = %w[open in_progress waiting closed]
+  # c.initial_status    = "open"
+  # c.final_statuses    = %w[closed]
+  # c.board_closed_days = 7   # final columns show tickets closed in the last N days
 
   # Web interface (mount Trailticket::Web). Denies everyone until configured.
   # c.authorize     = ->(request) { request.env["warden"]&.user&.admin? }
@@ -32,7 +36,7 @@ Trailticket.configure do |c|
   # Hooks, run after commit.
   # c.on_ticket_created  = ->(ticket) { }
   # c.on_message_created = ->(message) { }
-  # c.on_status_changed  = ->(ticket, from, to) { }
+  # c.on_status_changed  = ->(ticket, from, to, actor) { }
 
   # Context capture. Rails' filter_parameters are always applied too.
   # c.sensitive_fields += %w[birth_date]

@@ -24,6 +24,14 @@
       <% end %>
     </select>
   </label>
+  <label class="tt-field">
+    <span><%= tt('archive.filter') %></span>
+    <select name="archived">
+      <option value=""><%= tt('archive.not_archived') %></option>
+      <option value="only" <%= 'selected' if @filters[:archived] == 'only' %>><%= tt('archive.only') %></option>
+      <option value="all" <%= 'selected' if @filters[:archived] == 'all' %>><%= tt('archive.all') %></option>
+    </select>
+  </label>
   <div class="tt-filter-actions">
     <button type="submit" class="tt-button tt-primary"><%= tt('filter') %></button>
     <%= link_to tt('clear'), list_path, class: 'tt-button' %>
@@ -54,7 +62,7 @@
           <tr data-tt-row>
             <td class="tt-muted"><%= ticket.id %></td>
             <td><a href="<%= ticket_path(ticket) %>" data-tt-title><%= ticket.title %></a></td>
-            <td><%= status_badge(ticket.status) %></td>
+            <td><%= status_badge(ticket.status) %><% if ticket.archived? %> <span class="tt-badge" data-tt-archived><%= tt('archive.badge') %></span><% end %></td>
             <td><%= priority_badge(ticket.priority) %></td>
             <td><%= author_label(ticket.author) %></td>
             <td><%= subject_label(ticket.subject) %></td>

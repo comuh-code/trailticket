@@ -7,7 +7,14 @@
 </header>
 
 <% if @error %>
-  <p class="tt-error" role="alert" data-tt-error><%= tt('status_error', error: @error) %></p>
+  <p class="tt-error" role="alert" data-tt-error><%= @error %></p>
+<% end %>
+
+<% if @ticket.archived? %>
+  <div class="tt-archived-banner" data-tt-archived-banner>
+    <span><%= tt('archive.banner', date: @ticket.archived_at.strftime('%Y-%m-%d %H:%M')) %></span>
+    <%= button_to tt('archive.unarchive'), ticket_archive_path(@ticket), method: :delete, class: 'tt-button', form_class: 'tt-inline-form' %>
+  </div>
 <% end %>
 
 <%= render 'trailticket/panel/tickets/status_buttons', ticket: @ticket %>

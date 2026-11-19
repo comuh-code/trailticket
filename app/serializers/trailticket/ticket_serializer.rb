@@ -19,6 +19,7 @@ module Trailticket
         assignee: user(@ticket.assignee),
         closed_by: user(@ticket.closed_by),
         closed_at: @ticket.closed_at&.iso8601,
+        archived_at: @ticket.archived_at&.iso8601,
         created_at: @ticket.created_at&.iso8601,
         updated_at: @ticket.updated_at&.iso8601,
         screenshot_url: (@screenshot_url if @ticket.screenshot?),

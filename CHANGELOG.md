@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.4.0] - 2026-11-19
+
+### Added
+- `initial_status` and `final_statuses` config. Several final statuses are supported
+  (e.g. resolved and cancelled): entering any of them fills `closed_at`/`closed_by`, moving
+  between them keeps both. The config is validated when the app boots
+- Archiving: tickets in a final status can be archived from the card or the ticket page, which
+  hides them from the board and the default list. "Archived" filter in the list, unarchive
+  button, entries in the history; reopening unarchives. `Ticket#archive!`/`#unarchive!`,
+  `archived`/`unarchived` scopes and `archived_at` in the JSON API
+- `board_closed_days` (default 7): final columns of the board only show recently closed tickets
+- `on_status_changed` receives who made the change as a 4th argument; hooks with three
+  arguments keep working
+
+### Changed
+- No more silent fallback when a migration is missing: without `trailticket_events`, updating
+  a ticket raises instead of skipping the history (0.3.0 skipped it without warning)
+
+### Upgrading
+- New migration: `bin/rails trailticket:install:migrations && bin/rails db:migrate`.
+  Updating the gem does not copy migrations: without `install:migrations` the app does not see
+  them as pending, and the board, the list and ticket updates fail
+
 ## [0.3.0] - 2026-11-18
 
 ### Added

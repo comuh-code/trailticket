@@ -68,7 +68,9 @@ end
 | `user_json` | id + name | `->(user)` how users appear in the API — keep it minimal |
 | `parent_controller` | `"ApplicationController"` | Use `"ActionController::API"` in API-only apps |
 | `access_denied` | 403 JSON | Block run when access is denied |
-| `statuses` | `open in_progress waiting closed` | Ordered statuses (and board columns). First is the initial one, last is final |
+| `statuses` | `open in_progress waiting closed` | Ordered statuses (and board columns) |
+| `initial_status` | first of `statuses` | Status of new tickets |
+| `final_statuses` | last of `statuses` | One or more "done" statuses: entering one fills `closed_at`/`closed_by` |
 | `on_ticket_created`, `on_message_created`, `on_status_changed` | `nil` | Hooks, run after commit |
 | `sensitive_fields` | pass, secret, token, card, cvv, cvc, cpf, cnpj, ssn, iban, otp, pin | Extra names to mask, on top of `filter_parameters` |
 | `capture_field_values` | `true` | `false` keeps only *which* fields were filled |
@@ -240,11 +242,19 @@ Trailticket.configure do |c|
   c.author_label  = ->(user) { user.name }
   c.subject_label = ->(record) { record.try(:name) || "#{record.class.name} ##{record.id}" }
 
-  # Board columns, in order. The last one is final (fills closed_at/closed_by).
-  c.statuses = %w[open in_progress waiting closed]
+  # Board columns, in order; where new tickets start; which ones mean "done".
+  c.statuses       = %w[novo em_andamento aguardando resolvido cancelado]
+  c.initial_status = "novo"
+  c.final_statuses = %w[resolvido cancelado]
 
-  # Called on every status change, from the board, the ticket page or the API.
-  c.on_status_changed = ->(ticket, from, to) { TicketMailer.status(ticket, from, to).deliver_later }
+  # Final columns only show tickets closed in the last N days (nil: all).
+  c.board_closed_days = 7
+
+  # Called on every status change, from the board, the ticket page, the API or your code.
+  # actor is who made it (nil when unknown); (ticket, from, to) also works.
+  c.on_status_changed = lambda do |ticket, from, to, actor|
+    TicketMailer.status(ticket, from, to, actor).deliver_later
+  end
 
   # Optional: a partial of yours, rendered on the ticket page with a `ticket` local.
   c.context_partial = "admin/tickets/context"
@@ -257,8 +267,11 @@ end
 | `current_actor` | `nil` | `->(request) { record }` stored as `closed_by` when closing |
 | `author_label` | `"Class #id"` | `->(record) { String }` |
 | `subject_label` | `"Class #id"` | `->(record) { String }` |
-| `statuses` | `open in_progress waiting closed` | Columns, in order; last is final |
-| `on_status_changed` | `nil` | `->(ticket, from, to)`, after commit |
+| `statuses` | `open in_progress waiting closed` | Columns, in order |
+| `initial_status` | first of `statuses` | Where new tickets start |
+| `final_statuses` | last of `statuses` | "Done" statuses; only these can be archived |
+| `board_closed_days` | `7` | Final columns show tickets closed in the last N days; `nil` shows all |
+| `on_status_changed` | `nil` | `->(ticket, from, to, actor)`, after commit |
 | `context_partial` | `nil` | Partial rendered on the ticket page with `ticket` |
 
 The interface does not use `can_open`/`can_manage`, `current_user_method` or
@@ -267,10 +280,16 @@ The interface does not use `can_open`/`can_manage`, `current_user_method` or
 from your app's layout, asset pipeline, importmap, Hotwire or CSS framework is needed, and it
 works under a CSP without `unsafe-inline`.
 
-- **Status changes** are `PATCH` requests with the CSRF token. Moving to the final status
-  fills `closed_at` and `closed_by`; leaving it clears both. An invalid status returns 422 and
+- **Status changes** are `PATCH` requests with the CSRF token. Moving into a final status
+  fills `closed_at` and `closed_by`; moving back to a non-final one clears both (moving between
+  final statuses keeps them). An invalid status returns 422 and
   nothing is saved. On the ticket page there are buttons for each status, so it also works
   without drag and drop (keyboard, touch screens).
+- **Keeping the board short**: final columns only show tickets closed in the last
+  `board_closed_days` days, and tickets in a final status can be **archived** (button on the
+  card and on the ticket page) to take them off the board and the default list. The list has an
+  "Archived" filter to find them, and they can be unarchived; reopening an archived ticket
+  unarchives it. Archiving is recorded in the history.
 - **History**: the ticket page shows, in order, when it was opened, every status move
   (including close/reopen), priority and assignee change with who did it, and every reply and
   internal note. Changes are recorded in `trailticket_events` in the same transaction as the
@@ -313,7 +332,10 @@ bump its tag. To release:
    (annotated tag: `--follow-tags` does not push lightweight ones)
 3. In each app: update the tag, `bundle update trailticket`, then
    `bin/rails trailticket:install:migrations && bin/rails db:migrate` if there are new migrations
-   (0.3.0 adds one: `trailticket_events`, for the ticket history)
+   (0.3.0 adds `trailticket_events`, for the ticket history; 0.4.0 adds `archived_at`).
+   **Don't skip `install:migrations`**: updating the gem does not copy its migrations, so the app
+   does not even see them as pending — and the board, the list and ticket updates fail until
+   they run. Commit the copied migrations with the tag bump.
 
 ## Development
 

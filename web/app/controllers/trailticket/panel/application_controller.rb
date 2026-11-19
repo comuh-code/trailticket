@@ -29,7 +29,7 @@ class Trailticket::Panel::ApplicationController < ActionController::Base
   # Everything the ticket page needs; also used to re-render it with errors.
   def render_ticket_page(status: :ok)
     @messages = @ticket.messages.includes(:author).to_a
-    @events = Trailticket::Ticket.history? ? @ticket.events.includes(:actor).to_a : []
+    @events = @ticket.events.includes(:actor).to_a
     render 'trailticket/panel/tickets/show', status: status, formats: :html
   end
 

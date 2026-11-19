@@ -9,5 +9,7 @@ module Trailticket
         app.config.assets.precompile += %w[trailticket.js]
       end
     end
+
+    config.after_initialize { Trailticket.config.validate! }
   end
 end

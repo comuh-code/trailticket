@@ -3,15 +3,18 @@
 class Trailticket::Panel::TicketsController < Trailticket::Panel::ApplicationController
   BOARD_LIMIT = 50
   PER_PAGE = 25
+  ARCHIVE_FILTERS = %w[only all].freeze
+
+  # tickets: cards shown; shown: tickets in the column (within the closed window);
+  # total: every unarchived ticket with that status, for the "see all" link.
+  BoardColumn = Struct.new(:status, :tickets, :shown, :total, :window, keyword_init: true)
 
   before_action :set_ticket, only: %i[show status screenshot]
 
-  # GET /  — one column per status.
+  # GET /  — one column per status. Archived tickets never show; final columns
+  # only show tickets closed in the last config.board_closed_days days.
   def board
-    @counts = Trailticket::Ticket.group(:status).count
-    @columns = Trailticket.config.statuses.index_with do |status|
-      base_scope.where(status: status).order(updated_at: :desc, id: :desc).limit(BOARD_LIMIT).to_a
-    end
+    @columns = Trailticket.config.statuses.map { |status| board_column(status) }
   end
 
   # GET /list?q=&status=&priority=&page=
@@ -32,7 +35,7 @@ class Trailticket::Panel::TicketsController < Trailticket::Panel::ApplicationCon
   # PATCH /tickets/:id/status  status=...  (HTML form or JSON from the board)
   def status
     @ticket.status = params.fetch(:status, '').to_s
-    @ticket.closed_by = current_actor if @ticket.status_changed? && @ticket.final_status?
+    @ticket.closed_by = current_actor if @ticket.closing?
 
     if @ticket.save
       respond_to do |format|
@@ -64,17 +67,29 @@ class Trailticket::Panel::TicketsController < Trailticket::Panel::ApplicationCon
     Trailticket::Ticket.includes(:author, :subject)
   end
 
+  def board_column(status)
+    scope = Trailticket::Ticket.unarchived.where(status: status)
+    final = Trailticket::Ticket.final_statuses.include?(status)
+    days = Trailticket.config.board_closed_days if final
+    visible = days ? scope.where(closed_at: days.days.ago..) : scope
+    BoardColumn.new(
+      status: status, window: days, shown: visible.count, total: scope.count,
+      tickets: base_scope.merge(visible).order(updated_at: :desc, id: :desc).limit(BOARD_LIMIT).to_a
+    )
+  end
+
   # Optional and forgiving: unknown values are ignored, not an error.
   def filters
     {
       q: params.fetch(:q, '').to_s.strip.first(200),
       status: params.fetch(:status, nil).presence_in(Trailticket.config.statuses),
-      priority: params.fetch(:priority, nil).presence_in(Trailticket::Ticket::PRIORITIES)
+      priority: params.fetch(:priority, nil).presence_in(Trailticket::Ticket::PRIORITIES),
+      archived: params.fetch(:archived, nil).presence_in(ARCHIVE_FILTERS)
     }
   end
 
   def filtered_scope
-    scope = Trailticket::Ticket.all
+    scope = archive_scope
     if @filters[:q].present?
       pattern = "%#{Trailticket::Ticket.sanitize_sql_like(@filters[:q])}%"
       scope = scope.where(Trailticket::Ticket.arel_table[:title].matches(pattern, '\\'))
@@ -82,6 +97,15 @@ class Trailticket::Panel::TicketsController < Trailticket::Panel::ApplicationCon
     scope = scope.where(status: @filters[:status]) if @filters[:status]
     scope = scope.where(priority: @filters[:priority]) if @filters[:priority]
     scope
+  end
+
+  # Archived tickets are left out of the list unless asked for.
+  def archive_scope
+    case @filters[:archived]
+    when 'only' then Trailticket::Ticket.archived
+    when 'all' then Trailticket::Ticket.all
+    else Trailticket::Ticket.unarchived
+    end
   end
 
   # Own message for the common case, so it does not depend on the app having
@@ -93,11 +117,14 @@ class Trailticket::Panel::TicketsController < Trailticket::Panel::ApplicationCon
   end
 
   def status_failed
-    @error = status_error_message
+    message = status_error_message
     @ticket.restore_attributes
     respond_to do |format|
-      format.html { render_ticket_page(status: :unprocessable_content) }
-      format.json { render json: { error: @error }, status: :unprocessable_content }
+      format.html do
+        @error = I18n.t('trailticket.web.status_error', error: message)
+        render_ticket_page(status: :unprocessable_content)
+      end
+      format.json { render json: { error: message }, status: :unprocessable_content }
     end
   end
 end

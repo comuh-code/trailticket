@@ -64,7 +64,7 @@ module Trailticket
         @ticket.assignee = find_assignee(attrs[:assignee_id])
         return render(json: { errors: { assignee_id: ["is not allowed"] } }, status: 422) if @invalid_assignee
       end
-      @ticket.closed_by = ticket_user if @ticket.status_changed? && @ticket.status_closed?
+      @ticket.closed_by = ticket_user if @ticket.closing?
 
       if @ticket.save
         render json: serialize(@ticket, details: true)

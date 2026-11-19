@@ -28,6 +28,7 @@ module Trailticket::Panel::TimelineHelper
   def event_parts(event)
     case event.action
     when 'status_changed' then status_event_parts(event)
+    when 'archived', 'unarchived' then [event.action, nil, nil]
     when 'priority_changed'
       ['priority_changed', priority_label(event.from), priority_label(event.to)]
     else
@@ -36,9 +37,9 @@ module Trailticket::Panel::TimelineHelper
   end
 
   def status_event_parts(event)
-    final = Trailticket::Ticket.final_status
-    key = if event.to == final then 'closed'
-          elsif event.from == final then 'reopened'
+    finals = Trailticket::Ticket.final_statuses
+    key = if finals.include?(event.to) && finals.exclude?(event.from) then 'closed'
+          elsif finals.include?(event.from) && finals.exclude?(event.to) then 'reopened'
           else 'status_changed'
           end
     [key, status_label(event.from), status_label(event.to)]

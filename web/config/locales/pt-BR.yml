@@ -16,6 +16,9 @@ pt-BR:
       list: Lista
       back: Voltar ao quadro
       empty_column: Nenhum chamado
+      board_window:
+        one: Fechados no último dia
+        other: Fechados nos últimos %{count} dias
       see_all:
         one: Ver o chamado na lista
         other: Ver todos os %{count} na lista
@@ -69,6 +72,18 @@ pt-BR:
         reopened_html: "<strong>%{actor}</strong> reabriu o chamado (%{from} → %{to})"
         priority_changed_html: "<strong>%{actor}</strong> mudou a prioridade de %{from} para %{to}"
         assignee_changed_html: "<strong>%{actor}</strong> mudou o responsável de %{from} para %{to}"
+        archived_html: "<strong>%{actor}</strong> arquivou o chamado"
+        unarchived_html: "<strong>%{actor}</strong> desarquivou o chamado"
+      archive:
+        button: Arquivar
+        unarchive: Desarquivar
+        banner: "Arquivado em %{date}. Não aparece no quadro nem na lista padrão."
+        badge: Arquivado
+        filter: Arquivados
+        not_archived: Não arquivados
+        only: Só arquivados
+        all: Todos
+        not_final: Só chamados em um status final podem ser arquivados.
       reply:
         title: Responder
         body: Mensagem

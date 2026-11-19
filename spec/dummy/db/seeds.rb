@@ -97,7 +97,7 @@ samples = [
   {
     title: "Texto do termo de uso desatualizado",
     body: "Ainda cita a versão de 2024.",
-    priority: "low", status: "closed", days: 20, path: "/termos"
+    priority: "low", status: "closed", days: 20, path: "/termos", archived: true
   },
   {
     title: "Dashboard demora para carregar",
@@ -160,6 +160,7 @@ samples.each_with_index do |sample, i|
   if i.odd?
     ticket.messages.create!(author: ticket.author, body: "Alguma novidade?")
   end
+  ticket.archive! if sample[:archived]
 
   # Spread the history over time, in the order it happened.
   time = sample[:days].days.ago - (i * 37).minutes
@@ -168,8 +169,10 @@ samples.each_with_index do |sample, i|
     record.update_columns(created_at: time + ((step + 1) * 25).minutes)
   end
   last = history.last&.created_at || time
+  closed = ticket.events.select { |e| e.action == "status_changed" && ticket.class.final_statuses.include?(e.to) }.last
   ticket.update_columns(created_at: time, updated_at: last,
-                        closed_at: (last if ticket.final_status?))
+                        closed_at: (closed&.created_at if ticket.final_status?),
+                        archived_at: (last if ticket.archived?))
 end
 
 Trailticket::Current.reset

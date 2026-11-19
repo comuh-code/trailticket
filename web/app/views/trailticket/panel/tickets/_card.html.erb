@@ -13,4 +13,7 @@
       <dd><%= subject_label(ticket.subject) %></dd>
     <% end %>
   </dl>
+  <%# Shown only in final columns; the board script toggles it when the card moves. %>
+  <%= button_to tt('archive.button'), ticket_archive_path(ticket), class: 'tt-link-button',
+                form_class: 'tt-card-archive', form: { hidden: !ticket.archivable?, data: { tt_archive: true } } %>
 <% end %>

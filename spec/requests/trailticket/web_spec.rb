@@ -121,6 +121,115 @@ RSpec.describe 'Trailticket web interface' do
     end
   end
 
+  describe 'board window and archiving' do
+    let(:recent) { create(:ticket, title: 'Closed today', author: member) }
+    let(:old) { create(:ticket, title: 'Closed long ago', author: member) }
+    let(:archived) { create(:ticket, title: 'Archived one', author: member) }
+
+    before do
+      [recent, old, archived].each { |t| t.close!(by: agent) }
+      old.update_columns(closed_at: 30.days.ago) # rubocop:disable Rails/SkipsModelValidations
+      archived.archive!
+    end
+
+    def card_titles(status)
+      column(status).css('[data-tt-card] .tt-card-title').map(&:text)
+    end
+
+    it 'shows only recently closed, unarchived tickets in final columns' do
+      get '/chamados', headers: auth(agent)
+
+      expect(card_titles('closed')).to eq(['Closed today'])
+      expect(column('closed').at_css('[data-tt-count]').text).to eq('1')
+      expect(column('closed').at_css('[data-tt-window]').text).to eq('Closed in the last 7 days')
+      expect(column('closed').at_css('[data-tt-more]').text).to eq('See all 2 in the list')
+      expect(column('open').at_css('[data-tt-window]')).to be_nil
+    end
+
+    it 'shows every unarchived closed ticket when board_closed_days is nil' do
+      allow(Trailticket.config).to receive(:board_closed_days).and_return(nil)
+
+      get '/chamados', headers: auth(agent)
+
+      expect(card_titles('closed')).to contain_exactly('Closed today', 'Closed long ago')
+    end
+
+    it 'offers archiving on cards only in final columns' do
+      create(:ticket, title: 'Still open', author: member)
+
+      get '/chamados', headers: auth(agent)
+
+      expect(column('closed').at_css('[data-tt-archive]')['hidden']).to be_nil
+      expect(column('open').at_css('[data-tt-archive]')['hidden']).not_to be_nil
+    end
+
+    it 'archives from the board and goes back to it' do
+      post "/chamados/tickets/#{recent.id}/archive",
+           headers: auth(agent).merge('Referer' => 'http://www.example.com/chamados')
+
+      expect(response).to redirect_to('http://www.example.com/chamados')
+      expect(recent.reload).to be_archived
+      expect(recent.events.last).to have_attributes(action: 'archived', actor: agent)
+    end
+
+    it 'refuses to archive a ticket that is not final' do
+      open_ticket = create(:ticket, author: member)
+
+      post "/chamados/tickets/#{open_ticket.id}/archive", headers: auth(agent)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(page.at_css('[data-tt-error]').text)
+        .to eq('Only tickets in a final status can be archived.')
+      expect(open_ticket.reload).not_to be_archived
+    end
+
+    it 'shows archived tickets with a banner and lets them be unarchived' do
+      get "/chamados/tickets/#{archived.id}", headers: auth(agent)
+      expect(page.at_css('[data-tt-archived-banner]')).to be_present
+      expect(page.at_css('[data-tt-archive-button]')).to be_nil
+
+      delete "/chamados/tickets/#{archived.id}/archive", headers: auth(agent)
+
+      expect(response).to redirect_to("/chamados/tickets/#{archived.id}")
+      expect(archived.reload).not_to be_archived
+    end
+
+    it 'leaves archived tickets out of the list unless asked' do
+      list = lambda do |params|
+        get '/chamados/list', params: params, headers: auth(agent)
+        page.css('[data-tt-row] [data-tt-title]').map(&:text)
+      end
+
+      expect(list.call({})).to contain_exactly('Closed today', 'Closed long ago')
+      expect(list.call(archived: 'only')).to eq(['Archived one'])
+      expect(list.call(archived: 'all').size).to eq(3)
+      expect(page.css('[data-tt-archived]').size).to eq(1)
+    end
+  end
+
+  describe 'several final statuses' do
+    let(:ticket) { create(:ticket, author: member) }
+
+    before do
+      allow(Trailticket.config).to receive_messages(
+        statuses: %w[open doing resolved cancelled], final_statuses: %w[resolved cancelled]
+      )
+    end
+
+    it 'closes on any of them and tells moves between finals apart' do
+      patch_status(ticket, 'cancelled')
+      expect(ticket.reload.closed_by).to eq(agent)
+
+      patch_status(ticket, 'resolved')
+      get "/chamados/tickets/#{ticket.id}", headers: auth(agent)
+
+      texts = page.css('[data-tt-history] .tt-timeline-text').map { |e| e.text.squish }
+      expect(texts).to include('Sergio closed the ticket (Open → Cancelled)',
+                               'Sergio moved it from Cancelled to Resolved')
+      expect(page.css('[data-tt-column]')).to be_empty
+    end
+  end
+
   describe 'GET /chamados/list' do
     before do
       create(:ticket, title: 'Checkout fails', priority: 'high')

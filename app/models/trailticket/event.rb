@@ -1,8 +1,9 @@
 module Trailticket
-  # One entry in a ticket's history: a status, priority or assignee change.
+  # One entry in a ticket's history: a status, priority or assignee change, or
+  # the ticket being archived/unarchived.
   # Replies are Trailticket::Message; the ticket page merges both in one timeline.
   class Event < ApplicationRecord
-    ACTIONS = %w[status_changed priority_changed assignee_changed].freeze
+    ACTIONS = %w[status_changed priority_changed assignee_changed archived unarchived].freeze
 
     belongs_to :ticket, inverse_of: :events
     # Who did it: Trailticket::Current.actor at the time, nil when unknown.

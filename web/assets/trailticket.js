@@ -95,6 +95,9 @@
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`)
       card.dataset.status = data.status
+      // Only tickets in a final status can be archived.
+      const archive = card.querySelector("[data-tt-archive]")
+      if (archive) archive.hidden = to.dataset.final !== "true"
     } catch (error) {
       const list = listOf(from)
       list.insertBefore(card, next && next.parentNode === list ? next : null)

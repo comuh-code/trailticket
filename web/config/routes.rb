@@ -6,6 +6,8 @@ Trailticket::Web.routes.draw do
   get 'tickets/:id', to: 'tickets#show', as: :ticket
   patch 'tickets/:id/status', to: 'tickets#status', as: :ticket_status
   post 'tickets/:ticket_id/messages', to: 'messages#create', as: :ticket_messages
+  post 'tickets/:id/archive', to: 'archives#create', as: :ticket_archive
+  delete 'tickets/:id/archive', to: 'archives#destroy'
   get 'tickets/:id/screenshot', to: 'tickets#screenshot', as: :ticket_screenshot
   get 'assets/:file', to: 'assets#show', as: :web_asset, format: false,
                       constraints: { file: /[a-z_-]+\.(css|js)/ }
