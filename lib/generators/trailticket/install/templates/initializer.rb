@@ -35,6 +35,8 @@ Trailticket.configure do |c|
   # c.author_label  = ->(user) { user.name }
   # c.subject_label = ->(record) { record.try(:name) || "#{record.class.name} ##{record.id}" }
   # c.context_partial = "admin/tickets/context"
+  # c.web_theme = "auto"                         # "auto", "light" or "dark"
+  # c.web_stylesheet = "/trailticket-theme.css"  # overrides --tt-* tokens
 
   # Hooks, run after commit.
   # c.on_ticket_created  = ->(ticket) { }

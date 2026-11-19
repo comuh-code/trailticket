@@ -2,10 +2,13 @@
   <h2><%= tt('details.title') %></h2>
   <% if ticket.needs_triage? %>
     <p class="tt-triage-hint" data-tt-triage-hint>
-      <%= tt('triage.hint', status: status_label(Trailticket::Ticket.initial_status)) %>
-      <% if ticket.suggested_priority %>
-        <br><%= tt('triage.suggested', priority: priority_label(ticket.suggested_priority)) %>
-      <% end %>
+      <%= tt_icon(:warning) %>
+      <span>
+        <%= tt('triage.hint', status: status_label(Trailticket::Ticket.initial_status)) %>
+        <% if ticket.suggested_priority %>
+          <br><%= tt('triage.suggested', priority: priority_label(ticket.suggested_priority)) %>
+        <% end %>
+      </span>
     </p>
   <% end %>
   <label class="tt-field">

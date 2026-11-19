@@ -1,18 +1,25 @@
 <%= tag.li class: 'tt-card', draggable: 'true',
            data: { tt_card: true, id: ticket.id, status: ticket.status, url: ticket_status_path(ticket) } do %>
-  <a class="tt-card-title" href="<%= ticket_path(ticket) %>" draggable="false"><%= ticket.title %></a>
   <div class="tt-card-meta">
     <%= triage_badge(ticket) %>
-    <span class="tt-muted">#<%= ticket.id %> · <%= time_label(ticket.created_at) %></span>
+    <span class="tt-card-id">#<%= ticket.id %></span>
   </div>
+  <a class="tt-card-title" href="<%= ticket_path(ticket) %>" draggable="false"><%= ticket.title %></a>
+  <div class="tt-card-foot">
   <dl class="tt-card-people">
-    <dt><%= tt('fields.author') %></dt>
-    <dd><%= author_label(ticket.author) %></dd>
+    <div>
+      <dt class="tt-sr-only"><%= tt('fields.author') %></dt>
+      <dd><% author = author_label(ticket.author) %><%= avatar(author) %><%= author %></dd>
+    </div>
     <% if ticket.subject %>
-      <dt><%= tt('fields.subject') %></dt>
-      <dd><%= subject_label(ticket.subject) %></dd>
+      <div>
+        <dt class="tt-sr-only"><%= tt('fields.subject') %></dt>
+        <dd><%= tt_icon(:pin) %><%= subject_label(ticket.subject) %></dd>
+      </div>
     <% end %>
   </dl>
+  <span class="tt-card-time"><%= time_label(ticket.created_at) %></span>
+  </div>
   <%# Shown only in final columns; the board script toggles it when the card moves. %>
   <%= button_to tt('archive.button'), ticket_archive_path(ticket), class: 'tt-link-button',
                 form_class: 'tt-card-archive', form: { hidden: !ticket.archivable?, data: { tt_archive: true } } %>

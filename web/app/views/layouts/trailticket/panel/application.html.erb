@@ -4,13 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="<%= web_theme == 'auto' ? 'light dark' : web_theme %>">
   <title><%= [content_for(:title), tt('title')].compact_blank.join(' · ') %></title>
   <%= csrf_meta_tags %>
-  <link rel="stylesheet" href="<%= web_asset_path('trailticket.css', v: Trailticket::VERSION) %>">
-  <script src="<%= web_asset_path('trailticket.js', v: Trailticket::VERSION) %>" defer></script>
+  <link rel="stylesheet" href="<%= web_asset_path('trailticket.css', v: web_asset_version('trailticket.css')) %>">
+  <% if (host_stylesheet = web_stylesheet_url) %>
+    <link rel="stylesheet" href="<%= host_stylesheet %>">
+  <% end %>
+  <script src="<%= web_asset_path('trailticket.js', v: web_asset_version('trailticket.js')) %>" defer></script>
 </head>
-<body class="tt">
-  <header class="tt-header">
+<body class="tt" data-tt-theme="<%= web_theme %>">
+  <header class="tt-toolbar">
     <a class="tt-brand" href="<%= root_path %>"><%= tt('title') %></a>
     <nav class="tt-nav" aria-label="<%= tt('title') %>">
       <%= link_to tt('board'), root_path, class: 'tt-nav-link', aria: { current: (controller.action_name == 'board' ? 'page' : nil) } %>
@@ -21,5 +25,8 @@
   <main class="tt-main">
     <%= yield %>
   </main>
+  <footer class="tt-footer">
+    <%= link_to tt('design.title'), design_system_path %> · trailticket <%= Trailticket::VERSION %>
+  </footer>
 </body>
 </html>

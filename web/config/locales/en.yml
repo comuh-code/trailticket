@@ -55,6 +55,7 @@ en:
         closed_at: Closed
         closed_by: Closed by
       ticket:
+        opened_by: "Opened by %{author}"
         description: Description
         details: Details
         trail: Navigation trail
@@ -110,3 +111,55 @@ en:
         body: You are not allowed to see this page.
       not_found:
         title: Ticket not found
+      design:
+        title: Design system
+        lead: "Tokens and components of this panel, rendered with its real CSS. Everything is scoped to .tt and uses --tt-* custom properties, so the panel fits inside any app."
+        embedding:
+          title: Embedding and theming
+          scope: "Scoped: every rule lives under .tt; nothing touches html, body or bare tags of your app."
+          tokens: "Prefixed tokens: every value is a --tt-* custom property, so nothing collides with your CSS."
+          font: "No font of its own: system font by default; set --tt-font: inherit to use your app's."
+          theme: "Theme: config.web_theme is auto (follows the browser), light or dark."
+          layout: "Fluid layout: no fixed heights; the board and tables scroll inside their own box."
+          accent: "Brand it with config.web_stylesheet: override --tt-accent and --tt-accent-text keeping 4.5:1 contrast."
+        colors: Colors
+        token: Token
+        light: Light
+        dark: Dark
+        usage: Usage
+        tokens:
+          bg: Page background
+          surface: Cards, panels and fields
+          surface_2: Supporting areas, messages, tabs
+          column: Board columns
+          text: Main text
+          muted: Secondary text and metadata (4.5:1 on surfaces)
+          border: Control borders (3:1)
+          line: Decorative dividers
+          accent: Primary action, selection and focus
+          accent_text: Text on the accent
+          accent_soft: Soft highlights
+          danger: Urgent priority
+          danger_soft: Error alerts
+          warning_soft: High priority and warnings
+          success: Done status
+        type: Typography
+        type_page: Page title
+        type_panel: Panel title
+        type_body: Body text, forms and tables
+        type_label: Labels and buttons
+        type_eyebrow: Column heading
+        shape: Shape and spacing
+        radius_sm: Buttons
+        radius: Cards, fields, alerts
+        radius_lg: Panels and columns
+        radius_pill: Badges, chips, tabs
+        target: "Spacing on a 4/8 px scale. Every control is at least 44 × 44 px; focus is a 3 px outline in --tt-accent."
+        components: Components
+        buttons: Buttons
+        alerts: Alerts
+        card: Board card
+        sample_error: "Error · TypeError in checkout.js:120:14"
+        sample_title: CSV import stopped at line 120
+        sample_reply: Thanks, we're looking into it.
+        sample_note: Looks related to yesterday's deploy.

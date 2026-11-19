@@ -6,7 +6,6 @@ module Trailticket::Panel::ApplicationHelper
   SAFE_SCHEMES = %w[http https].freeze
   MAX_DEPTH = 8
   EMPTY = '—'
-
   def tt(key, **options)
     t("trailticket.web.#{key}", **options)
   end
@@ -31,12 +30,14 @@ module Trailticket::Panel::ApplicationHelper
 
   def status_badge(status)
     css = "tt-badge tt-status tt-status-#{status.to_s.parameterize}"
-    content_tag(:span, status_label(status), class: css)
+    content_tag(:span, safe_join([status_dot(status), status_label(status)]), class: css)
   end
 
   def priority_badge(priority)
-    content_tag(:span, priority_label(priority),
-                class: "tt-badge tt-priority-#{priority.presence || 'none'}")
+    key = priority.presence || 'none'
+    icon = tt_icon(key) if tt_icon?(key)
+    content_tag(:span, safe_join([icon, priority_label(priority)].compact),
+                class: "tt-badge tt-priority-#{key}")
   end
 
   # "No priority (suggested: High)" while in triage.
@@ -47,7 +48,8 @@ module Trailticket::Panel::ApplicationHelper
     if (suggested = ticket.suggested_priority)
       text = tt('triage.suggested_short', text: text, priority: priority_label(suggested))
     end
-    content_tag(:span, text, class: 'tt-badge tt-priority-none', data: { tt_needs_priority: true })
+    content_tag(:span, safe_join([tt_icon(:none), text]), class: 'tt-badge tt-priority-none',
+                                                          data: { tt_needs_priority: true })
   end
 
   def time_label(time)

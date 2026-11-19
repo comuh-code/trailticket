@@ -15,8 +15,9 @@ class Trailticket::Panel::AssetsController < Trailticket::Panel::ApplicationCont
     type = TYPES[file.extname]
     return head(:not_found) unless type && file.file?
 
-    # URLs carry ?v=VERSION, so a new version busts the cache.
-    expires_in(params[:v] == Trailticket::VERSION ? 1.year : 5.minutes, public: true)
+    # URLs carry ?v=VERSION-DIGEST, so any change to the file busts the cache.
+    current = params[:v] == web_asset_version(file.basename)
+    expires_in(current ? 1.year : 5.minutes, public: true)
     send_file file, type: type, disposition: 'inline'
   end
 end

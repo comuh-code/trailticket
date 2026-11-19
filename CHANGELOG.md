@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.5.2] - 2026-11-20
+
+### Added
+- Light and dark themes for the web interface: `config.web_theme` (`"auto"`, the default, follows
+  the browser; `"light"`; `"dark"`)
+- `config.web_stylesheet`: a stylesheet of the host app loaded after the panel's CSS to override
+  its `--tt-*` tokens (accent color, font...)
+- Design system page in the panel (`/design-system`, linked in the footer) with tokens and every
+  component in both themes
+
+### Changed
+- New visual design for the board, list and ticket page: priority badges with icons, status dots,
+  avatars, a timeline for the navigation trail, dashed internal notes and 44 px touch targets
+- All CSS is scoped to `.tt` and all tokens are `--tt-*` custom properties, so the panel does not
+  leak styles into (or inherit them from) the host app. Custom views that relied on the old token
+  names (`--tt-low`, `--tt-high`...) need the new ones
+
 ## [0.5.1] - 2026-11-20
 
 ### Changed

@@ -1,0 +1,174 @@
+<% content_for :title, tt('design.title') %>
+<div class="tt-ds" data-tt-design-system>
+  <header class="tt-ds-section">
+    <p class="tt-eyebrow">trailticket <%= Trailticket::VERSION %></p>
+    <h1 class="tt-title"><%= tt('design.title') %></h1>
+    <p class="tt-ds-lead"><%= tt('design.lead') %></p>
+  </header>
+
+  <section class="tt-ds-section" aria-labelledby="tt-ds-embedding">
+    <h2 id="tt-ds-embedding"><%= tt('design.embedding.title') %></h2>
+    <div class="tt-ds-grid">
+      <ul class="tt-panel tt-ds-list">
+        <% %w[scope tokens font theme layout accent].each do |rule| %>
+          <li><%= tt("design.embedding.#{rule}") %></li>
+        <% end %>
+      </ul>
+      <pre class="tt-ds-code"># config/initializers/trailticket.rb
+Trailticket.configure do |c|
+  c.web_theme      = &quot;auto&quot;   # &quot;auto&quot;, &quot;light&quot; or &quot;dark&quot;
+  c.web_stylesheet = &quot;/trailticket-theme.css&quot;
+end
+
+/* public/trailticket-theme.css */
+.tt {
+  --tt-accent: #0a7d55;
+  --tt-accent-text: #ffffff;
+  --tt-font: inherit;
+}</pre>
+    </div>
+  </section>
+
+  <section class="tt-ds-section tt-ds-tokens" aria-labelledby="tt-ds-colors">
+    <h2 id="tt-ds-colors"><%= tt('design.colors') %></h2>
+    <div class="tt-table-wrap">
+      <table class="tt-table">
+        <thead>
+          <tr>
+            <th scope="col"><%= tt('design.token') %></th>
+            <th scope="col"><%= tt('design.light') %></th>
+            <th scope="col"><%= tt('design.dark') %></th>
+            <th scope="col"><%= tt('design.usage') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @color_tokens.each do |name, light, dark, usage| %>
+            <tr>
+              <td><code class="tt-mono"><%= name %></code></td>
+              <td><span class="tt-badges"><span class="tt tt-swatch tt-swatch-<%= name.delete_prefix('--tt-') %>" data-tt-theme="light"></span><code class="tt-mono tt-muted"><%= light %></code></span></td>
+              <td><span class="tt-badges"><span class="tt tt-swatch tt-swatch-<%= name.delete_prefix('--tt-') %>" data-tt-theme="dark"></span><code class="tt-mono tt-muted"><%= dark %></code></span></td>
+              <td><%= tt("design.tokens.#{usage}") %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="tt-ds-grid">
+    <section class="tt-ds-section" aria-labelledby="tt-ds-type">
+      <h2 id="tt-ds-type"><%= tt('design.type') %></h2>
+      <div class="tt-panel tt-ds-scale">
+        <div><span class="tt-ds-t1"><%= tt('design.type_page') %></span><code class="tt-mono tt-muted">32/40 · 700</code></div>
+        <div><span class="tt-ds-t2"><%= tt('title') %></span><code class="tt-mono tt-muted">24/32 · 700</code></div>
+        <div><span class="tt-ds-t3"><%= tt('design.type_panel') %></span><code class="tt-mono tt-muted">20/28 · 600</code></div>
+        <div><span><%= tt('design.type_body') %></span><code class="tt-mono tt-muted">15/1.5 · 400</code></div>
+        <div><span class="tt-ds-t4"><%= tt('design.type_label') %></span><code class="tt-mono tt-muted">14 · 600</code></div>
+        <div><span class="tt-eyebrow"><%= tt('design.type_eyebrow') %></span><code class="tt-mono tt-muted">12/16 · 600</code></div>
+        <div><span class="tt-mono">app.example/checkout?step=2</span><code class="tt-mono tt-muted">--tt-font-mono</code></div>
+      </div>
+    </section>
+    <section class="tt-ds-section" aria-labelledby="tt-ds-shape">
+      <h2 id="tt-ds-shape"><%= tt('design.shape') %></h2>
+      <div class="tt-panel tt-ds-stack">
+        <div class="tt-ds-radius">
+          <div><span class="tt-ds-shape tt-ds-shape-sm"></span><code class="tt-mono">--tt-radius-sm</code><small class="tt-muted"><%= tt('design.radius_sm') %></small></div>
+          <div><span class="tt-ds-shape tt-ds-shape-md"></span><code class="tt-mono">--tt-radius</code><small class="tt-muted"><%= tt('design.radius') %></small></div>
+          <div><span class="tt-ds-shape tt-ds-shape-lg"></span><code class="tt-mono">--tt-radius-lg</code><small class="tt-muted"><%= tt('design.radius_lg') %></small></div>
+          <div><span class="tt-ds-shape tt-ds-shape-pill"></span><code class="tt-mono">--tt-radius-pill</code><small class="tt-muted"><%= tt('design.radius_pill') %></small></div>
+        </div>
+        <p class="tt-muted tt-ds-flush"><%= tt('design.target') %></p>
+      </div>
+    </section>
+  </div>
+
+  <section class="tt-ds-section" aria-labelledby="tt-ds-components">
+    <h2 id="tt-ds-components"><%= tt('design.components') %></h2>
+    <div class="tt-ds-grid">
+      <% %w[light dark].each do |theme| %>
+        <div class="tt tt-ds-preview tt-ds-stack" data-tt-theme="<%= theme %>">
+          <p class="tt-eyebrow"><%= tt("design.#{theme}") %></p>
+
+          <div>
+            <h3><%= tt('fields.priority') %> · <code class="tt-mono">tt-badge tt-priority-*</code></h3>
+            <div class="tt-ds-row">
+              <% @priorities.each do |priority| %><%= priority_badge(priority) %><% end %>
+              <span class="tt-badge tt-priority-none"><%= tt_icon(:none) %><%= tt('triage.suggested_short', text: tt('triage.no_priority'), priority: priority_label('high')) %></span>
+            </div>
+          </div>
+
+          <div>
+            <h3><%= tt('fields.status') %> · <code class="tt-mono">tt-status tt-dot-*</code></h3>
+            <div class="tt-ds-row">
+              <% @statuses.each do |status| %><%= status_badge(status) %><% end %>
+            </div>
+          </div>
+
+          <div>
+            <h3><%= tt('design.buttons') %> · <code class="tt-mono">tt-button</code></h3>
+            <div class="tt-ds-row">
+              <button type="button" class="tt-button tt-primary"><%= tt('details.save') %></button>
+              <button type="button" class="tt-button"><%= tt('reply.submit') %></button>
+              <button type="button" class="tt-button tt-ghost"><%= tt('clear') %></button>
+              <button type="button" class="tt-link-button"><%= tt('archive.button') %></button>
+            </div>
+          </div>
+
+          <div class="tt-status-actions tt-ds-flush" role="group" aria-label="<%= tt('change_status') %>">
+            <span class="tt-muted"><%= tt('fields.status') %></span>
+            <% @statuses.first(3).each_with_index do |status, index| %>
+              <span class="tt-button<%= ' tt-current' if index.zero? %>"><%= status_label(status) %></span>
+            <% end %>
+          </div>
+
+          <div class="tt-ds-row tt-ds-row-end">
+            <label class="tt-field tt-field-grow">
+              <span><%= tt('search') %></span>
+              <input type="search" placeholder="<%= tt('search_placeholder') %>">
+            </label>
+            <label class="tt-field">
+              <span><%= tt('fields.priority') %></span>
+              <select><option><%= tt('triage.choose') %></option></select>
+            </label>
+          </div>
+
+          <div>
+            <h3><%= tt('design.alerts') %> · <code class="tt-mono">tt-alert</code></h3>
+            <p class="tt-alert"><%= tt_icon(:error) %><span><%= tt('design.sample_error') %></span></p>
+            <p class="tt-alert tt-alert-warning tt-ds-flush"><%= tt_icon(:warning) %><span><%= tt('triage.hint', status: status_label(Trailticket::Ticket.initial_status)) %></span></p>
+          </div>
+
+          <div>
+            <h3><%= tt('design.card') %> · <code class="tt-mono">tt-card</code></h3>
+            <div class="tt-column tt-ds-column">
+              <ol class="tt-cards">
+                <li class="tt-card">
+                  <div class="tt-card-meta"><%= priority_badge('high') %><span class="tt-card-id">#2</span></div>
+                  <a class="tt-card-title" href="#tt-ds-components"><%= tt('design.sample_title') %></a>
+                  <div class="tt-card-foot">
+                    <dl class="tt-card-people"><div><dt class="tt-sr-only"><%= tt('fields.author') %></dt><dd><%= avatar('Bruno') %>Bruno</dd></div></dl>
+                    <span class="tt-card-time">2026-11-17 23:54</span>
+                  </div>
+                </li>
+              </ol>
+            </div>
+          </div>
+
+          <div>
+            <h3><%= tt('ticket.history') %> · <code class="tt-mono">tt-message</code></h3>
+            <ol class="tt-timeline tt-ds-flush">
+              <li class="tt-message">
+                <div class="tt-message-head"><%= avatar('Sergio') %><strong>Sergio</strong><span class="tt-muted">2026-11-19 00:56</span></div>
+                <div class="tt-body"><%= tt('design.sample_reply') %></div>
+              </li>
+              <li class="tt-message tt-internal">
+                <div class="tt-message-head"><%= avatar('Sergio') %><strong>Sergio</strong><span class="tt-badge tt-badge-internal"><%= tt_icon(:lock) %><%= tt('ticket.internal') %></span></div>
+                <div class="tt-body"><%= tt('design.sample_note') %></div>
+              </li>
+            </ol>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </section>
+</div>

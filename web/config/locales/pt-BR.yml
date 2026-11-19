@@ -55,6 +55,7 @@ pt-BR:
         closed_at: Fechado em
         closed_by: Fechado por
       ticket:
+        opened_by: "Aberto por %{author}"
         description: Descrição
         details: Detalhes
         trail: Trilha de navegação
@@ -110,3 +111,55 @@ pt-BR:
         body: Você não tem permissão para ver esta página.
       not_found:
         title: Chamado não encontrado
+      design:
+        title: Design system
+        lead: "Tokens e componentes deste painel, renderizados com o CSS real. Tudo fica dentro de .tt e usa custom properties --tt-*, para o painel caber em qualquer aplicação."
+        embedding:
+          title: Embed e temas
+          scope: "Escopo único: toda regra vive sob .tt; nada toca html, body ou tags soltas da sua aplicação."
+          tokens: "Tokens com prefixo: todo valor é uma custom property --tt-*, sem colisão com o seu CSS."
+          font: "Sem fonte própria: usa a do sistema; defina --tt-font: inherit para herdar a da aplicação."
+          theme: "Tema: config.web_theme é auto (segue o navegador), light ou dark."
+          layout: "Layout fluido: sem alturas fixas; o quadro e as tabelas rolam dentro do próprio container."
+          accent: "Aplique sua marca com config.web_stylesheet: sobrescreva --tt-accent e --tt-accent-text mantendo contraste de 4,5:1."
+        colors: Cores
+        token: Token
+        light: Claro
+        dark: Escuro
+        usage: Uso
+        tokens:
+          bg: Fundo da página
+          surface: Cards, painéis e campos
+          surface_2: Áreas de apoio, mensagens, abas
+          column: Colunas do quadro
+          text: Texto principal
+          muted: Texto secundário e metadados (4,5:1 nas superfícies)
+          border: Borda de controles (3:1)
+          line: Filetes decorativos
+          accent: Ação primária, seleção e foco
+          accent_text: Texto sobre o acento
+          accent_soft: Destaques suaves
+          danger: Prioridade urgente
+          danger_soft: Alertas de erro
+          warning_soft: Prioridade alta e avisos
+          success: Status concluído
+        type: Tipografia
+        type_page: Título de página
+        type_panel: Título de painel
+        type_body: Texto, formulários e tabelas
+        type_label: Rótulos e botões
+        type_eyebrow: Cabeçalho de coluna
+        shape: Forma e espaço
+        radius_sm: Botões
+        radius: Cards, campos, alertas
+        radius_lg: Painéis e colunas
+        radius_pill: Selos, chips, abas
+        target: "Espaços na escala de 4/8 px. Todo controle tem no mínimo 44 × 44 px; o foco é um contorno de 3 px em --tt-accent."
+        components: Componentes
+        buttons: Botões
+        alerts: Alertas
+        card: Card do quadro
+        sample_error: "Erro · TypeError em checkout.js:120:14"
+        sample_title: Importação de CSV parou na linha 120
+        sample_reply: Obrigado, estamos olhando.
+        sample_note: Parece ligado ao deploy de ontem.

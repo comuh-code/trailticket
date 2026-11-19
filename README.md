@@ -331,6 +331,50 @@ works under a CSP without `unsafe-inline`.
 - **Customizing views**: copy any template from the gem's
   `web/app/views/trailticket/panel/` to the same path in your app's `app/views/` to override it.
 
+### Theme and design system
+
+The panel ships with a light and a dark theme and a small design system. Everything is scoped
+to `.tt` and every value is a `--tt-*` custom property, so it never touches your app's CSS and
+your CSS never breaks it.
+
+```ruby
+Trailticket.configure do |c|
+  c.web_theme      = "auto"                    # "auto" (follows the browser), "light" or "dark"
+  c.web_stylesheet = "/trailticket-theme.css"  # optional; String or ->(request) { String }
+end
+```
+
+```css
+/* public/trailticket-theme.css: loaded after the panel's CSS */
+.tt {
+  --tt-accent: #0a7d55;      /* primary action, selection and focus */
+  --tt-accent-text: #ffffff; /* keep 4.5:1 against --tt-accent */
+  --tt-font: inherit;        /* use your app's font */
+}
+```
+
+| Token | Light | Dark | Usage |
+| --- | --- | --- | --- |
+| `--tt-bg` | `#f6f7f9` | `#0f1115` | Page background |
+| `--tt-surface` | `#ffffff` | `#171a20` | Cards, panels, fields |
+| `--tt-surface-2` | `#f0f2f5` | `#222631` | Supporting areas, messages, tabs |
+| `--tt-column` | `#eceff3` | `#13161b` | Board columns |
+| `--tt-text` | `#1f2328` | `#e6e9ef` | Main text |
+| `--tt-muted` | `#59636e` | `#9aa4b2` | Secondary text (4.5:1) |
+| `--tt-border` | `#8c959f` | `#6b7585` | Control borders (3:1) |
+| `--tt-line` | `#1f23281a` | `#ffffff1a` | Decorative dividers |
+| `--tt-accent` / `--tt-accent-text` | `#2f5fd0` / `#fff` | `#7aa5ff` / `#0f1115` | Primary action, selection, focus |
+| `--tt-danger`, `--tt-danger-soft` | `#c4312b`, `#fdecea` | `#ff7a72`, `#3a1a19` | Urgent priority, errors |
+| `--tt-warning-soft` | `#fff1dc` | `#3a2710` | High priority, warnings |
+| `--tt-success` | `#2e8540` | `#5cc36f` | Done status |
+| `--tt-radius-sm` / `--tt-radius` / `--tt-radius-lg` | 8 / 12 / 16 px | | Buttons / cards, fields / panels |
+| `--tt-font`, `--tt-font-mono` | system fonts | | Text and code |
+
+Priorities and statuses never rely on color alone: badges carry an icon and a word, and status
+dots follow the status role (initial outlined, work filled, done green). The full reference, with
+every component in both themes, is the **Design system** page of the panel itself
+(`/design-system` under the mount path, linked in the footer).
+
 ### Seeing it locally
 
 The dummy app in `spec/dummy` mounts the interface at `/chamados` with ~15 sample tickets:

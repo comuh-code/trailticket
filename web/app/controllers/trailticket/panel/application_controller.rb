@@ -14,7 +14,16 @@ class Trailticket::Panel::ApplicationController < ActionController::Base
     render_error :not_found, 'not_found'
   end
 
-  helper_method :assignee_options, :assignee_key
+  helper_method :assignee_options, :assignee_key, :web_asset_version
+
+  # Version + content digest, so a changed CSS/JS file gets a new URL even
+  # without a new gem version (browsers cache these for a year).
+  def web_asset_version(file)
+    path = Trailticket::Web.root.join('assets', File.basename(file.to_s))
+    return Trailticket::VERSION unless path.file?
+
+    "#{Trailticket::VERSION}-#{Digest::SHA256.file(path).hexdigest.first(8)}"
+  end
 
   private
 

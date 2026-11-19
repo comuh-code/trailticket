@@ -39,7 +39,9 @@
   </div>
 <% end %>
 
-<p class="tt-muted" data-tt-total><%= tt('total', count: @total) %></p>
+<div class="tt-list-meta">
+  <p class="tt-muted" data-tt-total><%= tt('total', count: @total) %></p>
+</div>
 
 <% if @tickets.empty? %>
   <p class="tt-empty-state"><%= tt('no_results') %></p>
@@ -65,7 +67,7 @@
             <td><a href="<%= ticket_path(ticket) %>" data-tt-title><%= ticket.title %></a></td>
             <td><%= status_badge(ticket.status) %><% if ticket.archived? %> <span class="tt-badge" data-tt-archived><%= tt('archive.badge') %></span><% end %></td>
             <td><%= triage_badge(ticket) %></td>
-            <td><%= author_label(ticket.author) %></td>
+            <td><% author = author_label(ticket.author) %><span class="tt-badges"><%= avatar(author) %><%= author %></span></td>
             <td><%= subject_label(ticket.subject) %></td>
             <td><%= time_label(ticket.created_at) %></td>
             <td><%= time_label(ticket.updated_at) %></td>

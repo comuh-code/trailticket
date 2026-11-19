@@ -86,6 +86,13 @@ class Trailticket::Configuration
   # context (e.g. "admin/tickets/context"). Optional.
   attr_accessor :context_partial
 
+  # "auto" (follows the browser's light/dark preference), "light" or "dark".
+  attr_accessor :web_theme
+
+  # URL of a stylesheet of yours, loaded after the panel's CSS to override its
+  # --tt-* tokens (accent color, font...). String or ->(request) { String }. Optional.
+  attr_accessor :web_stylesheet
+
   # --- Context capture -----------------------------------------------------
 
   # Extra field/param names to mask, on top of Rails' filter_parameters.
@@ -165,6 +172,8 @@ class Trailticket::Configuration
     @current_actor = ->(_request) {}
     @author_label = ->(record) { "#{record.class.name} ##{record.id}" }
     @subject_label = ->(record) { "#{record.class.name} ##{record.id}" }
+    @web_theme = 'auto'
+    @web_stylesheet = nil
   end
 
   def capture_defaults

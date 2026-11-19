@@ -1,9 +1,14 @@
 <% content_for :title, @ticket.title %>
-<p class="tt-back"><%= link_to "← #{tt('back')}", root_path %></p>
+<p class="tt-back"><%= link_to safe_join([tt_icon(:back), tt('back')]), root_path %></p>
 
 <header class="tt-ticket-head">
-  <h1 class="tt-title"><span class="tt-muted">#<%= @ticket.id %></span> <%= @ticket.title %></h1>
-  <div class="tt-badges"><%= status_badge(@ticket.status) %> <%= triage_badge(@ticket) %></div>
+  <div class="tt-badges">
+    <span class="tt-eyebrow">#<%= @ticket.id %></span>
+    <%= status_badge(@ticket.status) %>
+    <%= triage_badge(@ticket) %>
+  </div>
+  <h1 class="tt-title"><span class="tt-sr-only">#<%= @ticket.id %></span> <%= @ticket.title %></h1>
+  <p class="tt-muted tt-hint"><%= tt('ticket.opened_by', author: author_label(@ticket.author)) %> · <%= time_label(@ticket.created_at) %></p>
 </header>
 
 <% if @error %>
@@ -89,8 +94,10 @@
             <% message = entry.record %>
             <li id="message-<%= message.id %>" class="tt-timeline-item tt-message<%= ' tt-internal' if message.internal %>" data-tt-entry="<%= message.internal ? 'note' : 'message' %>">
               <div class="tt-message-head">
-                <strong><%= author_label(message.author) %></strong>
-                <% if message.internal %><span class="tt-badge tt-badge-internal"><%= tt('ticket.internal') %></span><% end %>
+                <% message_author = author_label(message.author) %>
+                <%= avatar(message_author) %>
+                <strong><%= message_author %></strong>
+                <% if message.internal %><span class="tt-badge tt-badge-internal"><%= tt_icon(:lock) %><%= tt('ticket.internal') %></span><% end %>
                 <span class="tt-muted"><%= time_label(message.created_at) %></span>
               </div>
               <div class="tt-body"><%= message.body %></div>

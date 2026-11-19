@@ -7,6 +7,7 @@
              data-final="<%= Trailticket::Ticket.final_statuses.include?(status) %>"
              aria-labelledby="tt-col-<%= status.parameterize %>">
       <header class="tt-column-head">
+        <%= status_dot(status) %>
         <h2 id="tt-col-<%= status.parameterize %>"><%= status_label(status) %></h2>
         <span class="tt-count" data-tt-count aria-label="<%= tt('total', count: column.shown) %>"><%= column.shown %></span>
       </header>

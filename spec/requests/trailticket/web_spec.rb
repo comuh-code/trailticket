@@ -114,10 +114,11 @@ RSpec.describe 'Trailticket web interface' do
     it "loads the engine's own CSS and JS, not the app's" do
       get '/chamados', headers: auth(agent)
 
+      version = /\?v=#{Regexp.escape(Trailticket::VERSION)}-\h{8}\z/o
       expect(page.at_css('link[rel="stylesheet"]')['href'])
-        .to eq("/chamados/assets/trailticket.css?v=#{Trailticket::VERSION}")
+        .to start_with('/chamados/assets/trailticket.css').and match(version)
       expect(page.at_css('script[src]')['src'])
-        .to eq("/chamados/assets/trailticket.js?v=#{Trailticket::VERSION}")
+        .to start_with('/chamados/assets/trailticket.js').and match(version)
     end
   end
 
@@ -733,6 +734,64 @@ RSpec.describe 'Trailticket web interface' do
       patch_status(ticket, 'resolvido')
       expect(ticket.reload.closed_by).to eq(agent)
       expect(Trailticket::Ticket.active).to be_empty
+    end
+  end
+
+  describe 'theme and design system' do
+    it 'follows the browser theme by default' do
+      get '/chamados', headers: auth(agent)
+
+      expect(page.at_css('body')['data-tt-theme']).to eq('auto')
+      expect(page.css('link[rel="stylesheet"]').size).to eq(1)
+    end
+
+    it 'uses config.web_theme and loads config.web_stylesheet after its own CSS' do
+      allow(Trailticket.config).to receive_messages(
+        web_theme: 'dark', web_stylesheet: ->(_request) { '/brand.css' }
+      )
+
+      get '/chamados', headers: auth(agent)
+
+      expect(page.at_css('body')['data-tt-theme']).to eq('dark')
+      expect(page.css('link[rel="stylesheet"]').pluck('href').last).to eq('/brand.css')
+    end
+
+    it 'falls back to auto for an unknown theme' do
+      allow(Trailticket.config).to receive(:web_theme).and_return('neon')
+
+      get '/chamados', headers: auth(agent)
+
+      expect(page.at_css('body')['data-tt-theme']).to eq('auto')
+    end
+
+    it 'shows the design system page with both themes' do
+      create(:ticket, author: member)
+
+      get '/chamados/design-system', headers: auth(agent)
+
+      expect(response).to have_http_status(:ok)
+      expect(page.at_css('[data-tt-design-system]')).to be_present
+      expect(page.css('.tt-ds-preview').pluck('data-tt-theme')).to eq(%w[light dark])
+      expect(page.at_css('[data-tt-design-system]').text).to include('--tt-accent', 'Urgent')
+    end
+
+    it 'keeps the design system page behind config.authorize' do
+      allow(Trailticket.config).to receive(:authorize).and_return(->(_request) { false })
+
+      get '/chamados/design-system', headers: auth(agent)
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it 'has no inline styles, so it works under a strict CSP' do
+      ticket = create(:ticket, author: member)
+
+      paths = ['/chamados', '/chamados/list', "/chamados/tickets/#{ticket.id}",
+               '/chamados/design-system']
+      paths.each do |path|
+        get path, headers: auth(agent)
+        expect(page.css('[style]')).to be_empty, "inline style on #{path}"
+      end
     end
   end
 end
