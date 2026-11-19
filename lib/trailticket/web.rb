@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# The panel's views are HAML; loading it here registers the template handler
+# even when the host app does not use HAML itself.
+require 'haml'
+
 module Trailticket
   # Controllers, helpers and views of the web interface (web/app/*/trailticket/panel).
   module Panel

@@ -1,0 +1,193 @@
+- content_for :title, tt('design.title')
+.tt-ds{data: { tt_design_system: true }}
+  %header.tt-ds-section
+    %p.tt-eyebrow= "trailticket #{Trailticket::VERSION}"
+    %h1.tt-title= tt('design.title')
+    %p.tt-ds-lead= tt('design.lead')
+
+  %section.tt-ds-section{aria: { labelledby: 'tt-ds-embedding' }}
+    %h2#tt-ds-embedding= tt('design.embedding.title')
+    .tt-ds-grid
+      %ul.tt-panel.tt-ds-list
+        - %w[scope tokens font theme layout accent].each do |rule|
+          %li= tt("design.embedding.#{rule}")
+      %pre.tt-ds-code
+        :preserve
+          # config/initializers/trailticket.rb
+          Trailticket.configure do |c|
+            c.web_theme      = "auto"   # "auto", "light" or "dark"
+            c.web_stylesheet = "/trailticket-theme.css"
+          end
+
+          /* public/trailticket-theme.css */
+          .tt {
+            --tt-accent: #0a7d55;
+            --tt-accent-text: #ffffff;
+            --tt-font: inherit;
+          }
+
+  %section.tt-ds-section.tt-ds-tokens{aria: { labelledby: 'tt-ds-colors' }}
+    %h2#tt-ds-colors= tt('design.colors')
+    .tt-table-wrap
+      %table.tt-table
+        %thead
+          %tr
+            %th{scope: 'col'}= tt('design.token')
+            %th{scope: 'col'}= tt('design.light')
+            %th{scope: 'col'}= tt('design.dark')
+            %th{scope: 'col'}= tt('design.usage')
+        %tbody
+          - @color_tokens.each do |name, light, dark, usage|
+            - swatch = "tt-swatch-#{name.delete_prefix('--tt-')}"
+            %tr
+              %td
+                %code.tt-mono= name
+              %td
+                %span.tt-badges
+                  %span.tt.tt-swatch{class: swatch, data: { tt_theme: 'light' }}
+                  %code.tt-mono.tt-muted= light
+              %td
+                %span.tt-badges
+                  %span.tt.tt-swatch{class: swatch, data: { tt_theme: 'dark' }}
+                  %code.tt-mono.tt-muted= dark
+              %td= tt("design.tokens.#{usage}")
+
+  .tt-ds-grid
+    %section.tt-ds-section{aria: { labelledby: 'tt-ds-type' }}
+      %h2#tt-ds-type= tt('design.type')
+      .tt-panel.tt-ds-scale
+        %div
+          %span.tt-ds-t1= tt('design.type_page')
+          %code.tt-mono.tt-muted 32/40 · 700
+        %div
+          %span.tt-ds-t2= tt('title')
+          %code.tt-mono.tt-muted 24/32 · 700
+        %div
+          %span.tt-ds-t3= tt('design.type_panel')
+          %code.tt-mono.tt-muted 20/28 · 600
+        %div
+          %span= tt('design.type_body')
+          %code.tt-mono.tt-muted 15/1.5 · 400
+        %div
+          %span.tt-ds-t4= tt('design.type_label')
+          %code.tt-mono.tt-muted 14 · 600
+        %div
+          %span.tt-eyebrow= tt('design.type_eyebrow')
+          %code.tt-mono.tt-muted 12/16 · 600
+        %div
+          %span.tt-mono app.example/checkout?step=2
+          %code.tt-mono.tt-muted --tt-font-mono
+    %section.tt-ds-section{aria: { labelledby: 'tt-ds-shape' }}
+      %h2#tt-ds-shape= tt('design.shape')
+      .tt-panel.tt-ds-stack
+        .tt-ds-radius
+          - [%w[sm --tt-radius-sm radius_sm], %w[md --tt-radius radius],
+             %w[lg --tt-radius-lg radius_lg], %w[pill --tt-radius-pill radius_pill]].each do |size, token, usage|
+            %div
+              %span.tt-ds-shape{class: "tt-ds-shape-#{size}"}
+              %code.tt-mono= token
+              %small.tt-muted= tt("design.#{usage}")
+        %p.tt-muted.tt-ds-flush= tt('design.target')
+
+  %section.tt-ds-section{aria: { labelledby: 'tt-ds-components' }}
+    %h2#tt-ds-components= tt('design.components')
+    .tt-ds-grid
+      - %w[light dark].each do |theme|
+        .tt.tt-ds-preview.tt-ds-stack{data: { tt_theme: theme }}
+          %p.tt-eyebrow= tt("design.#{theme}")
+
+          %div
+            %h3
+              = tt('fields.priority')
+              ·
+              %code.tt-mono tt-badge tt-priority-*
+            .tt-ds-row
+              - @priorities.each do |priority|
+                = priority_badge(priority)
+              %span.tt-badge.tt-priority-none
+                = tt_icon(:none)
+                = tt('triage.suggested_short', text: tt('triage.no_priority'), priority: priority_label('high'))
+
+          %div
+            %h3
+              = tt('fields.status')
+              ·
+              %code.tt-mono tt-status tt-dot-*
+            .tt-ds-row
+              - @statuses.each do |status|
+                = status_badge(status)
+
+          %div
+            %h3
+              = tt('design.buttons')
+              ·
+              %code.tt-mono tt-button
+            .tt-ds-row
+              %button.tt-button.tt-primary{type: 'button'}= tt('details.save')
+              %button.tt-button{type: 'button'}= tt('reply.submit')
+              %button.tt-button.tt-ghost{type: 'button'}= tt('clear')
+              %button.tt-link-button{type: 'button'}= tt('archive.button')
+
+          .tt-status-actions.tt-ds-flush{role: 'group', aria: { label: tt('change_status') }}
+            %span.tt-muted= tt('fields.status')
+            - @statuses.first(3).each_with_index do |status, index|
+              %span{class: ['tt-button', ('tt-current' if index.zero?)]}= status_label(status)
+
+          .tt-ds-row.tt-ds-row-end
+            %label.tt-field.tt-field-grow
+              %span= tt('search')
+              %input{type: 'search', placeholder: tt('search_placeholder')}
+            %label.tt-field
+              %span= tt('fields.priority')
+              %select
+                %option= tt('triage.choose')
+
+          %div
+            %h3
+              = tt('design.alerts')
+              ·
+              %code.tt-mono tt-alert
+            %p.tt-alert
+              = tt_icon(:error)
+              %span= tt('design.sample_error')
+            %p.tt-alert.tt-alert-warning.tt-ds-flush
+              = tt_icon(:warning)
+              %span= tt('triage.hint', status: status_label(Trailticket::Ticket.initial_status))
+
+          %div
+            %h3
+              = tt('design.card')
+              ·
+              %code.tt-mono tt-card
+            .tt-column.tt-ds-column
+              %ol.tt-cards
+                %li.tt-card
+                  .tt-card-meta
+                    = priority_badge('high')
+                    %span.tt-card-id #2
+                  %a.tt-card-title{href: '#tt-ds-components'}= tt('design.sample_title')
+                  .tt-card-foot
+                    %dl.tt-card-people
+                      %div
+                        %dt.tt-sr-only= tt('fields.author')
+                        %dd= safe_join([avatar('Bruno'), 'Bruno'])
+                    %span.tt-card-time 2026-11-17 23:54
+
+          %div
+            %h3
+              = tt('ticket.history')
+              ·
+              %code.tt-mono tt-message
+            %ol.tt-timeline.tt-ds-flush
+              %li.tt-message
+                .tt-message-head
+                  = avatar('Sergio')
+                  %strong Sergio
+                  %span.tt-muted 2026-11-19 00:56
+                .tt-body= tt('design.sample_reply')
+              %li.tt-message.tt-internal
+                .tt-message-head
+                  = avatar('Sergio')
+                  %strong Sergio
+                  %span.tt-badge.tt-badge-internal= safe_join([tt_icon(:lock), tt('ticket.internal')])
+                .tt-body= tt('design.sample_note')

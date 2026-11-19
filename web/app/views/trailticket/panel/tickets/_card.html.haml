@@ -1,0 +1,20 @@
+= tag.li class: 'tt-card', draggable: 'true',
+         data: { tt_card: true, id: ticket.id, status: ticket.status, url: ticket_status_path(ticket) } do
+  .tt-card-meta
+    = triage_badge(ticket)
+    %span.tt-card-id= "##{ticket.id}"
+  %a.tt-card-title{href: ticket_path(ticket), draggable: 'false'}= ticket.title
+  .tt-card-foot
+    %dl.tt-card-people
+      %div
+        %dt.tt-sr-only= tt('fields.author')
+        - author = author_label(ticket.author)
+        %dd= safe_join([avatar(author), author])
+      - if ticket.subject
+        %div
+          %dt.tt-sr-only= tt('fields.subject')
+          %dd= safe_join([tt_icon(:pin), subject_label(ticket.subject)])
+    %span.tt-card-time= time_label(ticket.created_at)
+  -# Shown only in final columns; the board script toggles it when the card moves.
+  = button_to tt('archive.button'), ticket_archive_path(ticket), class: 'tt-link-button',
+              form_class: 'tt-card-archive', form: { hidden: !ticket.archivable?, data: { tt_archive: true } }

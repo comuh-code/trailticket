@@ -1,0 +1,131 @@
+- content_for :title, @ticket.title
+%p.tt-back= link_to safe_join([tt_icon(:back), tt('back')]), root_path
+
+%header.tt-ticket-head
+  .tt-badges
+    %span.tt-eyebrow= "##{@ticket.id}"
+    = status_badge(@ticket.status)
+    = triage_badge(@ticket)
+  %h1.tt-title
+    %span.tt-sr-only= "##{@ticket.id}"
+    = @ticket.title
+  %p.tt-muted.tt-hint
+    = tt('ticket.opened_by', author: author_label(@ticket.author))
+    ·
+    = time_label(@ticket.created_at)
+
+- if @error
+  %p.tt-error{role: 'alert', data: { tt_error: true }}= @error
+
+- if @ticket.archived?
+  .tt-archived-banner{data: { tt_archived_banner: true }}
+    %span= tt('archive.banner', date: @ticket.archived_at.strftime('%Y-%m-%d %H:%M'))
+    = button_to tt('archive.unarchive'), ticket_archive_path(@ticket), method: :delete,
+                class: 'tt-button', form_class: 'tt-inline-form'
+
+= render 'trailticket/panel/tickets/status_buttons', ticket: @ticket
+
+.tt-ticket
+  .tt-ticket-main
+    %section.tt-panel
+      %h2= tt('ticket.description')
+      .tt-body= @ticket.body
+
+    %section.tt-panel{data: { tt_trail: true }}
+      %h2= tt('ticket.trail')
+      - trail = ticket_trail(@ticket)
+      - if trail.empty?
+        %p.tt-muted= tt('ticket.trail_empty')
+      - else
+        %ol.tt-trail
+          - trail.each do |entry|
+            %li{class: ['tt-trail-item', "tt-trail-#{entry['type'].to_s.parameterize}"]}
+              %span.tt-trail-type= entry['type']
+              %span.tt-trail-label= entry['label']
+              %span.tt-trail-url= safe_link(entry['url'])
+              - if entry['at'].present?
+                %span.tt-muted.tt-trail-at= entry['at']
+
+    %section.tt-panel{data: { tt_context: true }}
+      %h2= tt('ticket.context')
+      - context = ticket_context(@ticket)
+      - if context.empty?
+        %p.tt-muted= tt('ticket.context_empty')
+      - else
+        = context_value(context)
+
+    - if Trailticket.config.context_partial.present?
+      %section.tt-panel{data: { tt_app_context: true }}
+        = render partial: Trailticket.config.context_partial, locals: { ticket: @ticket }
+
+    - if @ticket.screenshot?
+      %section.tt-panel
+        %h2= tt('ticket.screenshot')
+        %a{href: ticket_screenshot_path(@ticket), target: '_blank', rel: 'noopener'}
+          %img.tt-screenshot{src: ticket_screenshot_path(@ticket), alt: tt('ticket.screenshot'), loading: 'lazy'}
+
+    %section.tt-panel#history{data: { tt_history: true }}
+      %h2= tt('ticket.history')
+      %ol.tt-timeline
+        - ticket_timeline(@ticket, @events, @messages).each do |entry|
+          - case entry.kind
+          - when :created
+            %li.tt-timeline-item.tt-timeline-event{data: { tt_entry: 'created' }}
+              %span.tt-timeline-text= tt('timeline.created_html', actor: author_label(@ticket.author))
+              %span.tt-muted= time_label(entry.at)
+          - when :event
+            %li.tt-timeline-item.tt-timeline-event{data: { tt_entry: entry.record.action }}
+              %span.tt-timeline-text= event_sentence(entry.record)
+              %span.tt-muted= time_label(entry.at)
+          - else
+            - message = entry.record
+            %li{id: "message-#{message.id}",
+                class: ['tt-timeline-item', 'tt-message', ('tt-internal' if message.internal)],
+                data: { tt_entry: message.internal ? 'note' : 'message' }}
+              .tt-message-head
+                - message_author = author_label(message.author)
+                = avatar(message_author)
+                %strong= message_author
+                - if message.internal
+                  %span.tt-badge.tt-badge-internal= safe_join([tt_icon(:lock), tt('ticket.internal')])
+                %span.tt-muted= time_label(message.created_at)
+              .tt-body= message.body
+
+      = form_with url: ticket_messages_path(@ticket), method: :post,
+                  class: 'tt-reply', id: 'reply', data: { tt_reply: true } do
+        %h3.tt-reply-title= tt('reply.title')
+        - if @reply_error
+          %p.tt-error{role: 'alert', data: { tt_reply_error: true }}= @reply_error
+        %label.tt-field
+          %span.tt-sr-only= tt('reply.body')
+          %textarea{name: 'body', rows: 4, required: true, placeholder: tt('reply.placeholder')}= @reply&.body
+        .tt-reply-actions
+          %label.tt-check
+            %input{type: 'checkbox', name: 'internal', value: '1', checked: @reply&.internal}
+            %span= tt('reply.internal')
+          %button.tt-button.tt-primary{type: 'submit'}= tt('reply.submit')
+        %p.tt-muted.tt-hint= tt('reply.internal_hint')
+
+  %aside.tt-ticket-side
+    = render 'trailticket/panel/tickets/details_form', ticket: @ticket
+
+    .tt-panel
+      %h2= tt('ticket.details')
+      %dl.tt-details
+        %dt= tt('fields.page_url')
+        %dd.tt-break{data: { tt_page_url: true }}= safe_link(@ticket.page_url)
+        %dt= tt('fields.author')
+        %dd= author_label(@ticket.author)
+        %dt= tt('fields.subject')
+        %dd= subject_label(@ticket.subject)
+        %dt= tt('fields.assignee')
+        %dd= author_label(@ticket.assignee)
+        %dt= tt('fields.created_at')
+        %dd= time_label(@ticket.created_at)
+        %dt= tt('fields.updated_at')
+        %dd= time_label(@ticket.updated_at)
+        - if @ticket.closed_at
+          %dt= tt('fields.closed_at')
+          %dd= time_label(@ticket.closed_at)
+          %dt= tt('fields.closed_by')
+          %dd{data: { tt_closed_by: true }}= author_label(@ticket.closed_by)

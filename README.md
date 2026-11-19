@@ -328,8 +328,9 @@ works under a CSP without `unsafe-inline`.
 - **Translations**: English and Brazilian Portuguese are included (`trailticket.web.*`,
   `trailticket.statuses.*`, `trailticket.priorities.*`). Add your own locale file to translate
   further or to name custom statuses.
-- **Customizing views**: copy any template from the gem's
-  `web/app/views/trailticket/panel/` to the same path in your app's `app/views/` to override it.
+- **Customizing views**: the panel's templates are HAML (the gem brings and loads `haml`
+  itself). Copy any of them from `web/app/views/trailticket/panel/` to the same path in your
+  app's `app/views/` to override it, in HAML or ERB (`show.html.erb` works too).
 
 ### Theme and design system
 

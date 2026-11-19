@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.3] - 2026-11-20
+
+### Changed
+- The web interface's views are HAML (`.html.haml`) instead of ERB; the rendered HTML is the
+  same. trailticket now depends on the `haml` gem, which it loads itself, so host apps don't
+  need to use HAML. Views overridden by the app can be ERB or HAML
+
 ## [0.5.2] - 2026-11-20
 
 ### Added

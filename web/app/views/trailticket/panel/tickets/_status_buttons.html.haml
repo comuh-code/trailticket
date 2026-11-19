@@ -1,0 +1,11 @@
+.tt-status-actions{role: 'group', aria: { label: tt('change_status') }, data: { tt_status_actions: true }}
+  %span.tt-muted= "#{tt('change_status')}:"
+  - Trailticket.config.statuses.each do |status|
+    - if status == ticket.status
+      %span.tt-button.tt-current{aria: { current: 'true' }}= status_label(status)
+    - else
+      = button_to status_label(status), ticket_status_path(ticket), method: :patch,
+                  params: { status: status }, class: 'tt-button', form_class: 'tt-inline-form'
+  - if ticket.archivable?
+    = button_to tt('archive.button'), ticket_archive_path(ticket), class: 'tt-button tt-archive-button',
+                form_class: 'tt-inline-form', data: { tt_archive_button: true }

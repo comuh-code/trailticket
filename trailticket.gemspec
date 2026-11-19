@@ -24,5 +24,6 @@ Gem::Specification.new do |spec|
     Dir['{app,config,db,lib,web}/**/*', 'README.md', 'CHANGELOG.md', 'MIT-LICENSE']
   end
 
+  spec.add_dependency 'haml', '>= 6.0'
   spec.add_dependency 'rails', '>= 7.1'
 end

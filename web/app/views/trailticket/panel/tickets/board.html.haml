@@ -1,0 +1,20 @@
+- content_for :title, tt('board')
+%h1.tt-sr-only= tt('board')
+.tt-board{data: { tt_board: true, error: tt('move_failed') }}
+  - @columns.each do |column|
+    - status = column.status
+    %section.tt-column{data: { tt_column: true, status: status,
+                               final: Trailticket::Ticket.final_statuses.include?(status).to_s },
+                       aria: { labelledby: "tt-col-#{status.parameterize}" }}
+      %header.tt-column-head
+        = status_dot(status)
+        %h2{id: "tt-col-#{status.parameterize}"}= status_label(status)
+        %span.tt-count{data: { tt_count: true }, aria: { label: tt('total', count: column.shown) }}= column.shown
+      - if column.window
+        %p.tt-column-hint{data: { tt_window: true }}= tt('board_window', count: column.window)
+      %ol.tt-cards{data: { tt_cards: true }}
+        = render partial: 'trailticket/panel/tickets/card', collection: column.tickets, as: :ticket
+      = tag.p tt('empty_column'), class: 'tt-empty', data: { tt_empty: true }, hidden: column.tickets.any?
+      - if column.total > column.tickets.size
+        = link_to tt('see_all', count: column.total), list_path(status: status),
+                  class: 'tt-more', data: { tt_more: true }

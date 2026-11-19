@@ -1,0 +1,27 @@
+!!! 5
+%html{lang: I18n.locale}
+  %head
+    %meta{charset: 'utf-8'}
+    %meta{name: 'viewport', content: 'width=device-width, initial-scale=1'}
+    %meta{name: 'robots', content: 'noindex, nofollow'}
+    %meta{name: 'color-scheme', content: web_theme == 'auto' ? 'light dark' : web_theme}
+    %title= [content_for(:title), tt('title')].compact_blank.join(' · ')
+    = csrf_meta_tags
+    %link{rel: 'stylesheet', href: web_asset_path('trailticket.css', v: web_asset_version('trailticket.css'))}
+    - if (host_stylesheet = web_stylesheet_url)
+      %link{rel: 'stylesheet', href: host_stylesheet}
+    %script{src: web_asset_path('trailticket.js', v: web_asset_version('trailticket.js')), defer: true}
+  %body.tt{data: { tt_theme: web_theme }}
+    %header.tt-toolbar
+      %a.tt-brand{href: root_path}= tt('title')
+      %nav.tt-nav{aria: { label: tt('title') }}
+        = link_to tt('board'), root_path, class: 'tt-nav-link',
+                  aria: { current: (controller.action_name == 'board' ? 'page' : nil) }
+        = link_to tt('list'), list_path, class: 'tt-nav-link',
+                  aria: { current: (controller.action_name == 'index' ? 'page' : nil) }
+    .tt-flash{role: 'alert', data: { tt_flash: true }, hidden: true}
+    %main.tt-main
+      = yield
+    %footer.tt-footer
+      = link_to tt('design.title'), design_system_path
+      · trailticket #{Trailticket::VERSION}

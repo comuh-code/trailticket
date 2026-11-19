@@ -1,0 +1,27 @@
+= form_with url: ticket_details_path(ticket), method: :patch,
+            class: 'tt-panel tt-details-form', data: { tt_details: true } do
+  %h2= tt('details.title')
+  - if ticket.needs_triage?
+    %p.tt-triage-hint{data: { tt_triage_hint: true }}
+      = tt_icon(:warning)
+      %span
+        = tt('triage.hint', status: status_label(Trailticket::Ticket.initial_status))
+        - if ticket.suggested_priority
+          %br
+          = tt('triage.suggested', priority: priority_label(ticket.suggested_priority))
+  %label.tt-field
+    %span= tt('fields.priority')
+    %select{name: 'priority'}
+      - if ticket.priority.nil?
+        %option{value: ''}= tt('triage.choose')
+      - Trailticket::Ticket::PRIORITIES.reverse_each do |priority|
+        %option{value: priority, selected: ticket.priority == priority}= priority_label(priority)
+  %label.tt-field
+    %span= tt('fields.assignee')
+    %select{name: 'assignee'}
+      %option{value: ''}= tt('details.nobody')
+      - options = assignee_options
+      - options += [ticket.assignee] if ticket.assignee && options.exclude?(ticket.assignee)
+      - options.each do |person|
+        %option{value: assignee_key(person), selected: person == ticket.assignee}= author_label(person)
+  %button.tt-button.tt-primary{type: 'submit'}= tt('details.save')

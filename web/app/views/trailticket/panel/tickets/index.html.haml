@@ -1,0 +1,68 @@
+- content_for :title, tt('list')
+%h1.tt-title= tt('list')
+
+= form_with url: list_path, method: :get, class: 'tt-filters', role: 'search', skip_enforcing_utf8: true do
+  %label.tt-field.tt-field-grow
+    %span= tt('search')
+    %input{type: 'search', name: 'q', value: @filters[:q], placeholder: tt('search_placeholder')}
+  %label.tt-field
+    %span= tt('fields.status')
+    %select{name: 'status'}
+      %option{value: ''}= tt('any_status')
+      - Trailticket.config.statuses.each do |status|
+        %option{value: status, selected: @filters[:status] == status}= status_label(status)
+  %label.tt-field
+    %span= tt('fields.priority')
+    %select{name: 'priority'}
+      %option{value: ''}= tt('any_priority')
+      %option{value: 'none', selected: @filters[:priority] == 'none'}= tt('triage.no_priority')
+      - Trailticket::Ticket::PRIORITIES.each do |priority|
+        %option{value: priority, selected: @filters[:priority] == priority}= priority_label(priority)
+  %label.tt-field
+    %span= tt('archive.filter')
+    %select{name: 'archived'}
+      %option{value: ''}= tt('archive.not_archived')
+      %option{value: 'only', selected: @filters[:archived] == 'only'}= tt('archive.only')
+      %option{value: 'all', selected: @filters[:archived] == 'all'}= tt('archive.all')
+  .tt-filter-actions
+    %button.tt-button.tt-primary{type: 'submit'}= tt('filter')
+    = link_to tt('clear'), list_path, class: 'tt-button'
+
+.tt-list-meta
+  %p.tt-muted{data: { tt_total: true }}= tt('total', count: @total)
+
+- if @tickets.empty?
+  %p.tt-empty-state= tt('no_results')
+- else
+  .tt-table-wrap
+    %table.tt-table
+      %thead
+        %tr
+          - %w[id title status priority author subject created_at updated_at].each do |field|
+            %th{scope: 'col'}= tt("fields.#{field}")
+      %tbody
+        - @tickets.each do |ticket|
+          %tr{data: { tt_row: true }}
+            %td.tt-muted= ticket.id
+            %td
+              %a{href: ticket_path(ticket), data: { tt_title: true }}= ticket.title
+            %td
+              = status_badge(ticket.status)
+              - if ticket.archived?
+                %span.tt-badge{data: { tt_archived: true }}= tt('archive.badge')
+            %td= triage_badge(ticket)
+            %td
+              - author = author_label(ticket.author)
+              %span.tt-badges= safe_join([avatar(author), author])
+            %td= subject_label(ticket.subject)
+            %td= time_label(ticket.created_at)
+            %td= time_label(ticket.updated_at)
+
+- if @pages > 1
+  %nav.tt-pagination{aria: { label: tt('pagination') }}
+    - query = @filters.compact_blank
+    - if @page > 1
+      = link_to tt('previous'), list_path(query.merge(page: @page - 1)), class: 'tt-button', rel: 'prev'
+    %span{data: { tt_page: true }}= tt('page', page: @page, pages: @pages)
+    - if @page < @pages
+      = link_to tt('next'), list_path(query.merge(page: @page + 1)), class: 'tt-button', rel: 'next'
